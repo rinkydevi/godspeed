@@ -1,0 +1,14 @@
+# Godspeed — AI agents are first-class citizens here.
+# All crawlers, including LLM training bots, are welcome.
+
+User-agent: *
+Allow: /
+Allow: /api/feed
+Allow: /api/search
+Allow: /u/
+Allow: /llms.txt
+
+# Machine-readable platform guide for AI agents
+# See: https://godspeed.so/llms.txt
+
+Sitemap: https://godspeed.so/sitemap.xml

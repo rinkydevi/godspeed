@@ -1,0 +1,234 @@
+'use client'
+
+import { useState, useRef } from 'react'
+import Link from 'next/link'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { ImagePlus, X, Loader2 } from 'lucide-react'
+import { Avatar } from './Avatar'
+import { cn } from '@/lib/utils'
+import type { User } from '@/lib/types'
+
+interface ComposeBoxProps {
+  user: User | null
+  replyToId?: string
+  placeholder?: string
+  onSuccess?: () => void
+  autoFocus?: boolean
+}
+
+export function ComposeBox({
+  user,
+  replyToId,
+  placeholder = "What's happening in your model?",
+  onSuccess,
+  autoFocus = false,
+}: ComposeBoxProps) {
+  const [content, setContent] = useState('')
+  const [focused, setFocused] = useState(false)
+  const [imageUrl, setImageUrl] = useState<string | null>(null)
+  const [uploading, setUploading] = useState(false)
+  const [uploadError, setUploadError] = useState<string | null>(null)
+  const textareaRef = useRef<HTMLTextAreaElement>(null)
+  const fileInputRef = useRef<HTMLInputElement>(null)
+  const queryClient = useQueryClient()
+  const MAX_CHARS = 500
+
+  const mutation = useMutation({
+    mutationFn: async () => {
+      const res = await fetch('/api/posts', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          content: content.trim(),
+          reply_to_id: replyToId ?? null,
+          image_url: imageUrl ?? null,
+        }),
+      })
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}))
+        throw new Error(err.error || 'Failed to post')
+      }
+      return res.json()
+    },
+    onSuccess: () => {
+      setContent('')
+      setImageUrl(null)
+      queryClient.invalidateQueries({ queryKey: ['feed'] })
+      queryClient.invalidateQueries({ queryKey: ['post'] })
+      onSuccess?.()
+    },
+  })
+
+  async function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    setUploadError(null)
+    setUploading(true)
+
+    try {
+      // Step 1: get a presigned upload URL from the server (auth + validation only)
+      const presignRes = await fetch('/api/upload', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ filename: file.name, contentType: file.type, size: file.size }),
+      })
+      const presignData = await presignRes.json().catch(() => ({}))
+      if (!presignRes.ok) {
+        setUploadError(presignData.error ?? 'Upload failed')
+        return
+      }
+
+      // Step 2: PUT file directly to Supabase Storage — server never sees the bytes
+      const uploadRes = await fetch(presignData.uploadUrl, {
+        method: 'PUT',
+        headers: { 'Content-Type': file.type },
+        body: file,
+      })
+      if (!uploadRes.ok) {
+        setUploadError('Upload failed — please try again')
+        return
+      }
+
+      setImageUrl(presignData.publicUrl)
+    } catch {
+      setUploadError('Upload failed — please try again')
+    } finally {
+      setUploading(false)
+      e.target.value = ''
+    }
+  }
+
+  if (!user) {
+    return (
+      <div className="px-4 py-4 border-b border-[#1e1e1e] text-center text-[14px] text-[#777]">
+        <Link href="/login" className="font-semibold text-[#f1f1f1] hover:underline">Sign in</Link> to post
+      </div>
+    )
+  }
+
+  const remaining = MAX_CHARS - content.length
+  const isOverLimit = remaining < 0
+  const isNearLimit = remaining <= 50 && remaining >= 0
+  const canSubmit = content.trim().length > 0 && !isOverLimit && !mutation.isPending && !uploading
+
+  function handleKeyDown(e: React.KeyboardEvent) {
+    if ((e.metaKey || e.ctrlKey) && e.key === 'Enter' && canSubmit) {
+      e.preventDefault()
+      mutation.mutate()
+    }
+  }
+
+  return (
+    <div className="border-b border-[#1e1e1e] px-4 py-4">
+      <div className="flex gap-3">
+        <Avatar src={user.avatar_url} name={user.display_name} size={36} />
+
+        <div className="flex-1">
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/jpeg,image/png,image/gif,image/webp"
+            className="hidden"
+            onChange={handleFileChange}
+          />
+
+          <textarea
+            ref={textareaRef}
+            value={content}
+            onChange={(e) => setContent(e.target.value)}
+            onFocus={() => setFocused(true)}
+            onBlur={() => !content && !imageUrl && setFocused(false)}
+            onKeyDown={handleKeyDown}
+            placeholder={placeholder}
+            autoFocus={autoFocus}
+            rows={focused || content ? 3 : 1}
+            className={cn(
+              'w-full resize-none bg-transparent text-black dark:text-[#f1f1f1] placeholder:text-zinc-400 dark:placeholder:text-[#555]',
+              'text-[15px] leading-relaxed outline-none transition-all',
+              'border-0 p-0'
+            )}
+          />
+
+          {/* Image preview */}
+          {imageUrl && (
+            <div className="relative mt-3 rounded-2xl overflow-hidden border border-zinc-200 dark:border-zinc-800 inline-block">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={imageUrl}
+                alt="Attached image"
+                className="max-h-48 max-w-full object-cover"
+              />
+              <button
+                onClick={() => setImageUrl(null)}
+                className="absolute top-2 right-2 w-6 h-6 rounded-full bg-zinc-900/70 text-white flex items-center justify-center hover:bg-zinc-900 transition-colors"
+                aria-label="Remove image"
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          )}
+
+          {(focused || content || imageUrl) && (
+            <div className="flex items-center justify-between mt-3 pt-3 border-t border-[#1e1e1e]">
+              {/* Left: image attach + char counter */}
+              <div className="flex items-center gap-3">
+                {!imageUrl && (
+                  <button
+                    onClick={() => fileInputRef.current?.click()}
+                    onMouseDown={(e) => e.preventDefault()}
+                    disabled={uploading}
+                    className="text-[#555] hover:text-[#f1f1f1] transition-colors disabled:opacity-50"
+                    aria-label="Attach image"
+                  >
+                    {uploading
+                      ? <Loader2 className="w-[18px] h-[18px] animate-spin" />
+                      : <ImagePlus className="w-[18px] h-[18px]" strokeWidth={1.75} />
+                    }
+                  </button>
+                )}
+
+                {(isNearLimit || isOverLimit) && (
+                  <span className={cn(
+                    'text-xs font-medium tabular-nums',
+                    isOverLimit ? 'text-rose-500' : 'text-amber-500'
+                  )}>
+                    {remaining}
+                  </span>
+                )}
+                {!isNearLimit && !isOverLimit && (
+                  <span className="text-[12px] text-zinc-400">{remaining}</span>
+                )}
+              </div>
+
+              {/* Right: errors + post button */}
+              <div className="flex items-center gap-2">
+                {uploadError && (
+                  <span className="text-xs text-rose-500">{uploadError}</span>
+                )}
+                {mutation.isError && (
+                  <span className="text-xs text-rose-500">
+                    {mutation.error instanceof Error ? mutation.error.message : 'Failed to post'}
+                  </span>
+                )}
+                <button
+                  onClick={() => mutation.mutate()}
+                  onMouseDown={(e) => e.preventDefault()}
+                  disabled={!canSubmit}
+                  className={cn(
+                    'px-4 py-1.5 rounded-full text-[14px] font-semibold transition-all',
+                    canSubmit
+                      ? 'bg-white text-black hover:bg-[#e8e8e8]'
+                      : 'bg-[#1e1e1e] text-[#555] cursor-not-allowed'
+                  )}
+                >
+                  {mutation.isPending ? 'Posting…' : 'Post'}
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  )
+}
