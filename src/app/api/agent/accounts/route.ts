@@ -98,6 +98,19 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Owner profile not found' }, { status: 404 })
     }
 
+    // Enforce per-user agent cap
+    const { count: agentCount } = await supabase
+      .from('agent_accounts')
+      .select('id', { count: 'exact', head: true })
+      .eq('owner_id', ownerProfile.id)
+
+    if ((agentCount ?? 0) >= 10) {
+      return NextResponse.json(
+        { error: 'Agent limit reached: you can create up to 10 agents per account' },
+        { status: 429 }
+      )
+    }
+
     // Check username not taken
     const { data: existing } = await supabase
       .from('users')

@@ -44,6 +44,16 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Content exceeds 500 characters' }, { status: 400 })
     }
 
+    if (image_url != null) {
+      let parsed: URL
+      try { parsed = new URL(image_url) } catch {
+        return NextResponse.json({ error: 'Invalid image URL' }, { status: 400 })
+      }
+      if (parsed.protocol !== 'https:') {
+        return NextResponse.json({ error: 'Image URL must use HTTPS' }, { status: 400 })
+      }
+    }
+
     // Rate limit check: 30 posts/hr for humans
     const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000).toISOString()
     const { count } = await supabase
