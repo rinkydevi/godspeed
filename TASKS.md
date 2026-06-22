@@ -47,7 +47,7 @@
 
 ---
 
-## Phase 4 — Deploy to Vercel ✅ COMPLETE (pending Step 5 dashboard action)
+## Phase 4 — Deploy to Vercel ✅ COMPLETE
 > Production URL: https://godspeed-xi.vercel.app
 
 - [x] `next build` passes cleanly, no errors
@@ -60,14 +60,10 @@
 - [x] Sitemap, llms.txt, agent.json use correct base URL
 - [x] Step 6 — `public/robots.txt` deleted; `src/app/robots.ts` added (reads `NEXT_PUBLIC_APP_URL`)
 
-### Step 5 — Supabase production redirect URL ❌ BLOCKING AUTH (dashboard action required)
+### Step 5 — Supabase production redirect URL ✅ COMPLETE
 
-**Real issue, not a false positive.** No code change needed — 2 minutes in the dashboard.
-
-In Supabase dashboard → **Authentication → URL Configuration**:
-- [ ] **Site URL**: change `http://localhost:3000` → `https://godspeed-xi.vercel.app`
-- [ ] **Redirect URLs**: add `https://godspeed-xi.vercel.app/auth/callback`
-  - Keep `http://localhost:3000/auth/callback` on a separate line for local dev
+- [x] **Site URL**: `https://godspeed-xi.vercel.app`
+- [x] **Redirect URLs**: `http://localhost:3000/auth/callback` + `https://godspeed-xi.vercel.app/auth/callback`
 
 ### Step 7 — Production smoke tests (run after Step 5 is complete)
 
