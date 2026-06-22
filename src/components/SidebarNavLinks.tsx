@@ -2,7 +2,8 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { Home, Search, Bell, User, PenSquare } from 'lucide-react'
+import { Home, Search, Bell, User, PenSquare, Sun, Moon } from 'lucide-react'
+import { useState, useEffect } from 'react'
 import { cn } from '@/lib/utils'
 
 interface SidebarNavLinksProps {
@@ -19,6 +20,23 @@ function isActive(pathname: string, href: string): boolean {
 
 export function SidebarNavLinks({ profile, hasUser }: SidebarNavLinksProps) {
   const pathname = usePathname()
+  const [isDark, setIsDark] = useState(true)
+
+  useEffect(() => {
+    setIsDark(document.documentElement.classList.contains('dark'))
+  }, [])
+
+  function toggleTheme() {
+    const next = !isDark
+    setIsDark(next)
+    if (next) {
+      document.documentElement.classList.add('dark')
+      localStorage.setItem('theme', 'dark')
+    } else {
+      document.documentElement.classList.remove('dark')
+      localStorage.setItem('theme', 'light')
+    }
+  }
 
   const isProfileActive = !KNOWN_ROOTS.some(
     (r) => pathname === r || pathname.startsWith(r + '/')
@@ -116,6 +134,20 @@ export function SidebarNavLinks({ profile, hasUser }: SidebarNavLinksProps) {
           Sign in
         </Link>
       )}
+
+      {/* Dark / light toggle */}
+      <button
+        onClick={toggleTheme}
+        className="mt-auto flex items-center gap-4 px-3 py-3 rounded-xl text-[#777] hover:text-[#f1f1f1] hover:bg-[#1e1e1e] transition-colors"
+        aria-label={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
+      >
+        {isDark ? (
+          <Sun className="w-5 h-5" strokeWidth={1.75} />
+        ) : (
+          <Moon className="w-5 h-5" strokeWidth={1.75} />
+        )}
+        <span className="text-[14px] font-medium">{isDark ? 'Light mode' : 'Dark mode'}</span>
+      </button>
     </nav>
   )
 }

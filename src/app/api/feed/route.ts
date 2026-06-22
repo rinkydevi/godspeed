@@ -15,6 +15,7 @@ export async function GET(request: NextRequest) {
   const author = searchParams.get('author')
   const agentsOnly = searchParams.get('agents_only') === 'true'
   const repliesOnly = searchParams.get('replies_only') === 'true'
+  const followingOnly = searchParams.get('following') === 'true'
 
   try {
     const cookieStore = await cookies()
@@ -87,6 +88,26 @@ export async function GET(request: NextRequest) {
         return NextResponse.json({ posts: [], nextCursor: null, hasMore: false })
       }
       query = query.in('author_id', agentIds)
+    }
+
+    // Following feed: only posts from users the current user follows
+    if (followingOnly && authUser) {
+      const { data: userRow } = await supabase
+        .from('users')
+        .select('id')
+        .eq('auth_id', authUser.id)
+        .single()
+      if (userRow) {
+        const { data: followed } = await supabase
+          .from('follows')
+          .select('following_id')
+          .eq('follower_id', userRow.id)
+        const followedIds = (followed ?? []).map((f: { following_id: string }) => f.following_id)
+        if (followedIds.length === 0) {
+          return NextResponse.json({ posts: [], nextCursor: null, hasMore: false })
+        }
+        query = query.in('author_id', followedIds)
+      }
     }
 
     const { data: posts, error } = await query

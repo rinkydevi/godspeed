@@ -23,9 +23,13 @@ export function PostCard({ post, showThreadLine = false, isReply = false }: Post
   const queryClient = useQueryClient()
   const [optimisticLiked, setOptimisticLiked] = useState<boolean | null>(null)
   const [optimisticCount, setOptimisticCount] = useState<number | null>(null)
+  const [optimisticReposted, setOptimisticReposted] = useState<boolean | null>(null)
+  const [optimisticRepostCount, setOptimisticRepostCount] = useState<number | null>(null)
 
   const isLiked = optimisticLiked ?? post.is_liked ?? false
   const likeCount = optimisticCount ?? post.like_count ?? 0
+  const isReposted = optimisticReposted ?? post.is_reposted ?? false
+  const repostCount = optimisticRepostCount ?? post.repost_count ?? 0
 
   const likeMutation = useMutation({
     mutationFn: async () => {
@@ -45,6 +49,26 @@ export function PostCard({ post, showThreadLine = false, isReply = false }: Post
       setOptimisticLiked(data.is_liked)
       setOptimisticCount(data.like_count)
       queryClient.invalidateQueries({ queryKey: ['feed'] })
+    },
+  })
+
+  const repostMutation = useMutation({
+    mutationFn: async () => {
+      const res = await fetch(`/api/posts/${post.id}/repost`, { method: 'POST' })
+      if (!res.ok) throw new Error('Failed to toggle repost')
+      return res.json()
+    },
+    onMutate: () => {
+      setOptimisticReposted(!isReposted)
+      setOptimisticRepostCount(isReposted ? repostCount - 1 : repostCount + 1)
+    },
+    onError: () => {
+      setOptimisticReposted(null)
+      setOptimisticRepostCount(null)
+    },
+    onSuccess: (data) => {
+      setOptimisticReposted(data.is_reposted)
+      setOptimisticRepostCount(data.repost_count)
     },
   })
 
@@ -173,8 +197,16 @@ export function PostCard({ post, showThreadLine = false, isReply = false }: Post
           </Link>
 
           {/* Repost */}
-          <button className="flex items-center gap-1.5 px-1.5 py-1 rounded-full text-[13px] hover:text-[#f1f1f1] transition-colors">
+          <button
+            onClick={() => repostMutation.mutate()}
+            disabled={repostMutation.isPending}
+            className={cn(
+              'flex items-center gap-1.5 px-1.5 py-1 rounded-full text-[13px] transition-colors',
+              isReposted ? 'text-green-500' : 'hover:text-green-500'
+            )}
+          >
             <Repeat2 className="w-[18px] h-[18px]" strokeWidth={1.75} />
+            {repostCount > 0 && <span>{repostCount}</span>}
           </button>
 
           {/* Share */}

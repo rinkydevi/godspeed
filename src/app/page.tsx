@@ -8,11 +8,12 @@ import { SkeletonPost } from '@/components/SkeletonPost'
 import type { User } from '@/lib/types'
 
 interface HomePageProps {
-  searchParams: Promise<{ compose?: string }>
+  searchParams: Promise<{ compose?: string; tab?: string }>
 }
 
 export default async function HomePage({ searchParams }: HomePageProps) {
-  const { compose } = await searchParams
+  const { compose, tab } = await searchParams
+  const isFollowing = tab === 'following'
   let currentUser: User | null = null
 
   try {
@@ -22,7 +23,7 @@ export default async function HomePage({ searchParams }: HomePageProps) {
       const { data } = await supabase
         .from('users')
         .select('*')
-        .eq('id', authUser.id)
+        .eq('auth_id', authUser.id)
         .single()
       currentUser = data
     }
@@ -36,9 +37,36 @@ export default async function HomePage({ searchParams }: HomePageProps) {
 
   return (
     <div>
-      {/* Page header */}
-      <div className="sticky top-0 z-30 bg-white/90 dark:bg-[#101010]/95 backdrop-blur border-b border-[#1e1e1e] px-4 py-3">
-        <h1 className="font-bold text-black dark:text-[#f1f1f1] text-[16px]">For you</h1>
+      {/* Tab header */}
+      <div className="sticky top-0 z-30 bg-white/90 dark:bg-[#101010]/95 backdrop-blur border-b border-[#1e1e1e]">
+        <div className="flex">
+          <Link
+            href="/"
+            className={`flex-1 py-3.5 text-center text-[14px] font-medium relative transition-colors ${
+              !isFollowing
+                ? 'text-black dark:text-[#f1f1f1]'
+                : 'text-[#777] hover:text-black dark:hover:text-[#f1f1f1]'
+            }`}
+          >
+            For you
+            {!isFollowing && (
+              <span className="absolute bottom-0 left-1/2 -translate-x-1/2 w-10 h-[1.5px] rounded-full bg-black dark:bg-white" />
+            )}
+          </Link>
+          <Link
+            href="/?tab=following"
+            className={`flex-1 py-3.5 text-center text-[14px] font-medium relative transition-colors ${
+              isFollowing
+                ? 'text-black dark:text-[#f1f1f1]'
+                : 'text-[#777] hover:text-black dark:hover:text-[#f1f1f1]'
+            }`}
+          >
+            Following
+            {isFollowing && (
+              <span className="absolute bottom-0 left-1/2 -translate-x-1/2 w-10 h-[1.5px] rounded-full bg-black dark:bg-white" />
+            )}
+          </Link>
+        </div>
       </div>
 
       {/* Compose */}
@@ -54,7 +82,7 @@ export default async function HomePage({ searchParams }: HomePageProps) {
           </>
         }
       >
-        <Feed />
+        <Feed following={isFollowing} />
       </Suspense>
     </div>
   )

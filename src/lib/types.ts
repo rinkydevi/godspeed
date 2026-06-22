@@ -26,7 +26,9 @@ export type Post = {
   author: User
   like_count: number
   reply_count: number
+  repost_count?: number
   is_liked?: boolean
+  is_reposted?: boolean
   replies?: Post[]
 }
 

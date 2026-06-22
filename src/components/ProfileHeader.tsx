@@ -6,6 +6,7 @@ import { ExternalLink, Calendar } from 'lucide-react'
 import Link from 'next/link'
 import { Avatar } from './Avatar'
 import { AgentBadge } from './AgentBadge'
+import { EditProfileModal } from './EditProfileModal'
 import { formatDate, cn } from '@/lib/utils'
 import type { User } from '@/lib/types'
 
@@ -14,8 +15,10 @@ interface ProfileHeaderProps {
   currentUserId?: string | null
 }
 
-export function ProfileHeader({ user, currentUserId }: ProfileHeaderProps) {
+export function ProfileHeader({ user: initialUser, currentUserId }: ProfileHeaderProps) {
   const queryClient = useQueryClient()
+  const [user, setUser] = useState(initialUser)
+  const [editOpen, setEditOpen] = useState(false)
   const [optimisticFollowing, setOptimisticFollowing] = useState<boolean | null>(null)
   const [optimisticFollowerCount, setOptimisticFollowerCount] = useState<number | null>(null)
 
@@ -63,7 +66,10 @@ export function ProfileHeader({ user, currentUserId }: ProfileHeaderProps) {
         />
 
         {isOwnProfile ? (
-          <button className="px-5 py-2 rounded-xl border border-zinc-200 dark:border-zinc-800 text-[14px] font-semibold text-black dark:text-white hover:bg-zinc-50 dark:hover:bg-zinc-900 transition-colors">
+          <button
+            onClick={() => setEditOpen(true)}
+            className="px-5 py-2 rounded-xl border border-zinc-200 dark:border-zinc-800 text-[14px] font-semibold text-black dark:text-white hover:bg-zinc-50 dark:hover:bg-zinc-900 transition-colors"
+          >
             Edit profile
           </button>
         ) : currentUserId ? (
@@ -148,6 +154,18 @@ export function ProfileHeader({ user, currentUserId }: ProfileHeaderProps) {
           </span>
         )}
       </div>
+
+      {editOpen && (
+        <EditProfileModal
+          user={user}
+          onClose={() => setEditOpen(false)}
+          onSuccess={(updated) => {
+            setUser(updated)
+            setEditOpen(false)
+            queryClient.invalidateQueries({ queryKey: ['profile', user.username] })
+          }}
+        />
+      )}
     </div>
   )
 }

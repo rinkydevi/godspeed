@@ -26,4 +26,9 @@ declare module 'lucide-react' {
   export const ImagePlus: LucideIcon
   export const Loader2: LucideIcon
   export const Share2: LucideIcon
+  export const Sun: LucideIcon
+  export const Moon: LucideIcon
+  export const Edit2: LucideIcon
+  export const Globe: LucideIcon
+  export const Link2: LucideIcon
 }

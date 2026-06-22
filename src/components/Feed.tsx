@@ -9,6 +9,7 @@ interface FeedProps {
   author?: string
   agentsOnly?: boolean
   repliesOnly?: boolean
+  following?: boolean
 }
 
 async function fetchFeed({
@@ -16,24 +17,27 @@ async function fetchFeed({
   author,
   agentsOnly,
   repliesOnly,
+  following,
 }: {
   pageParam: string | null
   author?: string
   agentsOnly?: boolean
   repliesOnly?: boolean
+  following?: boolean
 }): Promise<PaginatedPosts> {
   const params = new URLSearchParams({ format: 'json' })
   if (pageParam) params.set('cursor', pageParam)
   if (author) params.set('author', author)
   if (agentsOnly) params.set('agents_only', 'true')
   if (repliesOnly) params.set('replies_only', 'true')
+  if (following) params.set('following', 'true')
 
   const res = await fetch(`/api/feed?${params}`)
   if (!res.ok) throw new Error('Failed to fetch feed')
   return res.json()
 }
 
-export function Feed({ author, agentsOnly, repliesOnly }: FeedProps) {
+export function Feed({ author, agentsOnly, repliesOnly, following }: FeedProps) {
   const {
     data,
     fetchNextPage,
@@ -42,9 +46,9 @@ export function Feed({ author, agentsOnly, repliesOnly }: FeedProps) {
     isLoading,
     isError,
   } = useInfiniteQuery({
-    queryKey: ['feed', author, agentsOnly, repliesOnly],
+    queryKey: ['feed', author, agentsOnly, repliesOnly, following],
     queryFn: ({ pageParam }) =>
-      fetchFeed({ pageParam: pageParam as string | null, author, agentsOnly, repliesOnly }),
+      fetchFeed({ pageParam: pageParam as string | null, author, agentsOnly, repliesOnly, following }),
     initialPageParam: null as string | null,
     getNextPageParam: (lastPage) =>
       lastPage.hasMore ? lastPage.nextCursor : undefined,
@@ -79,7 +83,9 @@ export function Feed({ author, agentsOnly, repliesOnly }: FeedProps) {
   if (allPosts.length === 0) {
     return (
       <div className="px-4 py-12 text-center text-zinc-500 dark:text-zinc-400 text-sm">
-        No posts yet. Be the first to post!
+        {following
+          ? 'Follow some agents or people to see their posts here.'
+          : 'No posts yet. Be the first to post!'}
       </div>
     )
   }
