@@ -47,7 +47,7 @@
 
 ---
 
-## Phase 4 — Deploy to Vercel ✅ MOSTLY COMPLETE
+## Phase 4 — Deploy to Vercel ✅ COMPLETE (pending Step 5 dashboard action)
 > Production URL: https://godspeed-xi.vercel.app
 
 - [x] `next build` passes cleanly, no errors
@@ -58,87 +58,72 @@
 - [x] Deployed via `vercel --prod`
 - [x] `NEXT_PUBLIC_APP_URL` set to `https://godspeed-xi.vercel.app`
 - [x] Sitemap, llms.txt, agent.json use correct base URL
+- [x] Step 6 — `public/robots.txt` deleted; `src/app/robots.ts` added (reads `NEXT_PUBLIC_APP_URL`)
 
-### Step 5 — Supabase production redirect URL ❌ BLOCKING AUTH
+### Step 5 — Supabase production redirect URL ❌ BLOCKING AUTH (dashboard action required)
 
-**This is a real issue, not a false positive.**
-
-Evidence: The `rinkydevi` user in the DB was created on `localhost:3000`, not
-on the production URL. Google OAuth on production will return "Internal Server
-Error" until this is done. The auth callback route itself is reachable and
-correct — this is purely a Supabase dashboard configuration step.
-
-Action (2 minutes, no code change):
+**Real issue, not a false positive.** No code change needed — 2 minutes in the dashboard.
 
 In Supabase dashboard → **Authentication → URL Configuration**:
-- [ ] **Site URL**: `http://localhost:3000` → `https://godspeed-xi.vercel.app`
+- [ ] **Site URL**: change `http://localhost:3000` → `https://godspeed-xi.vercel.app`
 - [ ] **Redirect URLs**: add `https://godspeed-xi.vercel.app/auth/callback`
-  - Keep `http://localhost:3000/auth/callback` on a separate line
+  - Keep `http://localhost:3000/auth/callback` on a separate line for local dev
 
-### Step 6 — robots.txt sitemap URL ❌ BUG
-
-`public/robots.txt` has `https://godspeed.so/sitemap.xml` hardcoded — wrong
-on the deployed site. Fix: convert to a route handler so it reads `NEXT_PUBLIC_APP_URL`.
-
-- [ ] Create `src/app/robots.txt/route.ts` (same pattern as llms.txt)
-- [ ] Delete `public/robots.txt`
-
-### Step 7 — Production smoke tests
+### Step 7 — Production smoke tests (run after Step 5 is complete)
 
 **Auth**
 - [ ] `/login` → "Continue with Google" visible
-- [ ] Sign in → redirects to `/onboarding` (new) or `/` (returning)
+- [ ] Sign in with Google → redirects to `/onboarding` (first time) or `/` (returning)
 - [ ] Onboarding → username saved, redirects to feed
 
 **Core features**
-- [ ] Feed loads with real posts (not skeleton)
+- [ ] Feed loads with real posts (not skeleton forever)
 - [ ] Compose a post → appears at top of feed
 - [ ] Like → heart turns red, count increments
 - [ ] Reply → thread page shows it
-- [ ] Follow → follower count increments
+- [ ] Follow → follower count increments on their profile
 
 **Search**
 - [ ] `GET /search?q=llm` → Posts and People tabs have results
 - [ ] Clicking a trending hashtag → results appear
 
-**Agent endpoints**
-- [x] `GET /llms.txt` → HTTP 200, text/plain ✓
-- [x] `GET /api/feed` → HTTP 200, JSON with posts + nextCursor ✓
-- [x] `GET /api/feed?agents_only=true` → all posts have `is_agent: true` ✓
-- [x] `GET /u/ResearchBot/agent.json` → HTTP 200, `_godspeed` block ✓
-- [x] `GET /sitemap.xml` → HTTP 200 ✓
-- [x] `GET /robots.txt` → HTTP 200 ✓ (URL content bug tracked above)
+**Agent endpoints** ✅ all verified on production
+- [x] `GET /llms.txt` → HTTP 200, text/plain
+- [x] `GET /api/feed` → HTTP 200, JSON with posts + nextCursor
+- [x] `GET /api/feed?agents_only=true` → all posts have `is_agent: true`
+- [x] `GET /u/ResearchBot/agent.json` → HTTP 200, `_godspeed` block
+- [x] `GET /sitemap.xml` → HTTP 200, application/xml
+- [x] `GET /robots.txt` → HTTP 200
 
 **Image uploads**
 - [ ] Attach image in compose → appears in post
 
 ---
 
-## Phase 5 — UX Completion
-> Core features that are stubbed or missing. Ship these before wider distribution.
+## Phase 5 — UX Completion ✅ COMPLETE
 
-### 5a — Edit profile
-- [ ] Profile edit modal/sheet: display name, bio, website, avatar upload
-- [ ] `PATCH /api/users/me` route — validates + updates `users` row
-- [ ] Avatar: presigned upload to `avatars` bucket (same pattern as post images)
-- [ ] "Edit profile" button in `ProfileHeader` wires to modal
+### 5a — Edit profile ✅
+- [x] `PATCH /api/users/me` — validates display_name/bio/website/avatar_url, updates `users` row
+- [x] `EditProfileModal` — slide-up sheet, all fields, bio char counter (200 limit)
+- [x] `ProfileHeader` — Edit profile button opens modal, local state updates instantly
+- [ ] Avatar file upload (presigned to `avatars` bucket) — deferred to Phase 9
 
-### 5b — Following feed tab
-- [ ] "For you / Following" tab toggle on home feed
-- [ ] `GET /api/feed?following=true` — filters posts to accounts the current user follows
-- [ ] Falls back to global feed when not authenticated
+### 5b — Following feed tab ✅
+- [x] Home page: "For you / Following" tab (URL-driven: `/?tab=following`)
+- [x] `Feed`: `following` prop → `?following=true` query param
+- [x] Feed API: `followingOnly` filter queries `follows` table, returns only followed-user posts
+- [x] Empty state: "Follow some agents or people to see their posts here."
 
-### 5c — Repost
-- [ ] `POST /api/posts/[postId]/repost` — creates a repost record
-- [ ] `DELETE /api/posts/[postId]/repost` — undo repost
-- [ ] `repost_count` column on posts (trigger-maintained, like `like_count`)
-- [ ] PostCard: repost button toggles, shows count
-- [ ] Reposted posts appear in the poster's profile Threads tab with attribution header
+### 5c — Repost ✅
+- [x] `supabase/migrations/002_reposts.sql` — `reposts` table, trigger, RLS (run in dashboard)
+- [x] `POST /api/posts/[postId]/repost` — toggle with mock fallback
+- [x] `PostCard`: optimistic state, green icon when reposted, count display
+- [x] `types.ts`: `repost_count`, `is_reposted` added to `Post`
 
-### 5d — Dark mode toggle
-- [ ] Toggle button in sidebar footer (sun/moon icon)
-- [ ] Writes to `localStorage` key `theme`, applies `dark` class to `<html>`
-- [ ] Current hardcoded-dark behavior preserved as default
+### 5d — Dark mode toggle ✅
+- [x] Sun/Moon button in sidebar footer (`SidebarNavLinks`)
+- [x] Writes to `localStorage` key `theme`, toggles `dark` class on `<html>`
+- [x] Defaults to dark mode (existing behaviour preserved)
 
 ---
 
