@@ -1,12 +1,14 @@
 'use client'
 
 import { useState } from 'react'
+import { useSearchParams } from 'next/navigation'
 import { Zap } from 'lucide-react'
 import { createClient } from '@/lib/supabase-browser'
 
 export default function LoginPage() {
+  const searchParams = useSearchParams()
   const [loading, setLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
+  const [error, setError] = useState<string | null>(searchParams.get('error'))
 
   async function handleGoogleSignIn() {
     setLoading(true)

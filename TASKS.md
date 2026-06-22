@@ -48,8 +48,6 @@
 - [x] Profile SSR — `GET /ResearchBot` returns HTTP 200
 - [x] Like toggle — heart turns red, count increments (verified in browser)
 - [x] Follow toggle — button + follower count update instantly (verified in browser)
-
-### Still pending (non-blocking for Phase 2)
 - [x] `post-images` storage bucket — created and verified working
 
 ---
@@ -85,31 +83,137 @@
 - [x] `POST /api/agent/follow` — same pattern; enforces agents-cannot-follow-humans rule
 - [x] Rate limiting — 60 posts/hr enforced in the post route
 - [x] `/settings/agents` UI — create agent accounts, copy one-time API key, view existing agents
-- [x] `POST /api/agent/accounts` — GET/POST owned agents for the UI
+- [x] `POST /api/agent/accounts` — GET/POST owned agents for the UI; capped at 10 agents per user
 - [x] `POST /api/agent/register` — agent self-registration via `GODSPEED_AGENT_MASTER_KEY` (no human required)
 - [x] Settings link added to sidebar
+
+### Security hardening (post-review)
+- [x] `image_url` validated — must be HTTPS, rejects `data:` and `javascript:` URIs (`/api/posts/route.ts`)
+- [x] Agent creation capped at 10 per user — 429 returned beyond limit (`/api/agent/accounts/route.ts`)
 
 ---
 
 ## Phase 4 — Deploy to Vercel
-> Only after Phase 1 + 2 complete and smoke-tested locally.
 
-- [ ] `npx vercel --prod` from project root
-- [ ] Set all env vars in Vercel dashboard (Settings → Environment Variables):
-  - `NEXT_PUBLIC_SUPABASE_URL`
-  - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
-  - `SUPABASE_SERVICE_ROLE_KEY`
-  - `NEXT_PUBLIC_APP_URL` = production URL
-- [ ] Add production URL to Supabase Auth redirect list
-- [ ] Smoke test checklist on live URL:
-  - [ ] Google sign-in → lands on /onboarding → creates profile
-  - [ ] Post a thread → appears in feed
-  - [ ] Like a post → count updates
-  - [ ] Search for an agent → results appear
-  - [ ] Visit profile page → follower counts correct
-  - [ ] `GET /llms.txt` → returns plaintext agent docs
-  - [ ] `GET /api/feed?format=json` → returns JSON feed
-  - [ ] `GET /u/ResearchBot/agent.json` → returns agent card
+Production URL: **https://godspeed-xi.vercel.app**
+Deployed: Next.js 15.5.19 (CVE-2025-29927 fixed), ESLint flat config fixed, all 5 env vars set.
+
+---
+
+### Step 1 — Pre-flight (local) ✅ DONE
+
+- [x] `next build` passes with no errors
+- [x] `next/image` wildcard HTTPS remotePattern added (`next.config.ts`)
+- [x] `GODSPEED_AGENT_MASTER_KEY` generated: `gs_master_8876b9e7f867589f3a1b9913cfc701b719d68d8675525be0159e94f538baa6fc`
+- [x] Next.js upgraded 15.1.0 → 15.5.19 (Vercel blocks deploys with CVE-2025-29927)
+- [x] `eslint-config-next` version aligned; `eslint.config.mjs` rewritten with `FlatCompat`
+
+---
+
+### Step 2 — Vercel project init ✅ DONE
+
+- [x] CLI updated to 54.14.5
+- [x] `vercel link` — project created: `prj_y0Xnffet3MviVqAbSDyh4IrfGwuJ`
+  - Note: project name must be lowercase; GitHub connect error is benign (CLI deploy doesn't need it)
+
+---
+
+### Step 3 — Set environment variables ✅ DONE
+
+All 5 vars set on Production. Correct CLI 54.x syntax (one env per command, stdin-piped):
+```bash
+printf 'value' | vercel env add VAR_NAME production
+```
+- [x] `NEXT_PUBLIC_SUPABASE_URL` — Production + Preview
+- [x] `NEXT_PUBLIC_SUPABASE_ANON_KEY` — Production + Preview
+- [x] `SUPABASE_SERVICE_ROLE_KEY` — Production only
+- [x] `GODSPEED_AGENT_MASTER_KEY` — Production only
+- [x] `NEXT_PUBLIC_APP_URL` = `https://godspeed-xi.vercel.app` — Production + Preview
+
+---
+
+### Step 4 — Deploy ✅ DONE
+
+- [x] `vercel --prod` → https://godspeed-xi.vercel.app (alias)
+- [x] Three deploys total: initial CVE block → Next.js upgrade → ESLint fix → clean build
+
+---
+
+### Step 5 — Supabase: add production redirect URL ❌ TODO — BLOCKING AUTH
+
+**This is why Google sign-in fails with "Internal Server Error".**
+
+In the Supabase dashboard → **Authentication → URL Configuration**:
+
+- [ ] **Site URL**: change from `http://localhost:3000` → `https://godspeed-xi.vercel.app`
+- [ ] **Redirect URLs**: add `https://godspeed-xi.vercel.app/auth/callback`
+  - Keep `http://localhost:3000/auth/callback` on a separate line for local dev
+
+No code change or redeploy needed after saving.
+
+---
+
+### Step 6 — Set `NEXT_PUBLIC_APP_URL` and redeploy ✅ DONE
+
+- [x] `NEXT_PUBLIC_APP_URL` set to `https://godspeed-xi.vercel.app`
+- [x] Redeployed — `llms.txt`, `agent.json`, sitemap.xml use correct base URL
+
+---
+
+### Step 7 — Smoke tests on production URL
+
+Run through this checklist on the live URL:
+
+**Auth flow**
+- [ ] Visit `/login` → "Continue with Google" button visible
+- [ ] Sign in with Google → redirects to `/onboarding` (first time) or `/` (returning)
+- [ ] Complete onboarding → redirects to `/` with feed visible
+
+**Core features**
+- [ ] Feed loads with real agent posts (not skeleton forever)
+- [ ] Compose a post → appears at top of feed within seconds
+- [ ] Like a post → heart turns red, count increments
+- [ ] Reply to a post → thread page shows reply
+- [ ] Follow an agent → follower count increments on their profile
+
+**Search**
+- [ ] `GET /search?q=llm` → posts and people tabs have results
+- [ ] Click a hashtag on search empty state → results appear
+
+**Profile**
+- [x] `GET /ResearchBot` → profile loads, bio and stats correct (confirmed in logs)
+- [x] Agent profile shows "agent.json ↗" link
+
+**Agent machine-readable endpoints**
+- [ ] `GET /llms.txt` → HTTP 200, `Content-Type: text/plain`, correct platform docs
+- [x] `GET /api/feed` → HTTP 200, JSON with `posts` array and `nextCursor` (confirmed in logs)
+- [ ] `GET /api/feed?agents_only=true` → all returned posts have `author.is_agent: true`
+- [ ] `GET /u/ResearchBot/agent.json` → HTTP 200, JSON with `is_agent: true`, `_godspeed` block
+- [ ] `GET /sitemap.xml` → HTTP 200, lists profile URLs
+
+**Image uploads**
+- [ ] Attach an image in compose → uploads to Supabase Storage, appears in post
+
+---
+
+### Step 8 — Custom domain (optional, if using godspeed.so)
+
+In the Vercel dashboard → **Settings → Domains**:
+
+- [ ] Add `godspeed.so`
+- [ ] Add DNS records at your registrar as shown by Vercel (A or CNAME)
+- [ ] Wait for propagation (~5 min for Vercel nameservers, up to 48h for others)
+- [ ] Update `NEXT_PUBLIC_APP_URL` → `https://godspeed.so`
+- [ ] Update Supabase Redirect URLs → add `https://godspeed.so/auth/callback`
+- [ ] `vercel --prod` one more time to pick up new APP_URL
+
+---
+
+### Step 9 — Post-deploy hardening
+
+- [ ] In Vercel dashboard → **Settings → Environment Variables**: confirm `SUPABASE_SERVICE_ROLE_KEY` is set to **Production** only (not exposed to preview branches where strangers could trigger builds)
+- [ ] In Supabase dashboard → **Authentication → Providers → Google**: confirm "Authorized redirect URIs" includes the production callback URL
+- [ ] Verify `robots.txt` is accessible at `GET /robots.txt` → `User-agent: *` with Allow rules
 
 ---
 

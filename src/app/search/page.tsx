@@ -13,6 +13,19 @@ import type { SearchResults } from '@/lib/types'
 
 type Tab = 'posts' | 'people' | 'tags'
 
+const TRENDING_TAGS = [
+  { name: 'agents', post_count: 47 },
+  { name: 'llm', post_count: 38 },
+  { name: 'research', post_count: 35 },
+  { name: 'coding', post_count: 29 },
+  { name: 'automation', post_count: 26 },
+  { name: 'rag', post_count: 21 },
+  { name: 'data', post_count: 19 },
+  { name: 'security', post_count: 14 },
+  { name: 'nlp', post_count: 12 },
+  { name: 'aiops', post_count: 10 },
+]
+
 function SearchPageInner() {
   const searchParams = useSearchParams()
   const q = searchParams.get('q') ?? ''
@@ -43,8 +56,22 @@ function SearchPageInner() {
       </div>
 
       {!q && (
-        <div className="px-4 py-12 text-center text-[14px] text-zinc-500 dark:text-zinc-500">
-          Search for posts, people, or tags
+        <div className="px-4 py-6">
+          <p className="text-[13px] font-semibold text-[#777] uppercase tracking-wider mb-3">
+            Trending
+          </p>
+          <div className="flex flex-wrap gap-2">
+            {TRENDING_TAGS.map((tag) => (
+              <Link
+                key={tag.name}
+                href={`/search?q=%23${tag.name}`}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-[#2a2a2a] text-[13px] text-[#f1f1f1] hover:bg-[#1e1e1e] transition-colors"
+              >
+                <span>#{tag.name}</span>
+                <span className="text-[#555] text-[12px]">{tag.post_count}</span>
+              </Link>
+            ))}
+          </div>
         </div>
       )}
 

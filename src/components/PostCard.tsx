@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import Image from 'next/image'
 import { useRouter } from 'next/navigation'
 import { Heart, MessageCircle, Repeat2, Share2, MoreHorizontal } from 'lucide-react'
 import { useState } from 'react'
@@ -128,12 +129,13 @@ export function PostCard({ post, showThreadLine = false, isReply = false }: Post
         {/* Attached image */}
         {post.image_url && (
           <div className="mt-3 rounded-2xl overflow-hidden border border-zinc-100 dark:border-zinc-900">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
+            <Image
               src={post.image_url}
               alt=""
+              width={0}
+              height={0}
+              sizes="(max-width: 768px) 100vw, 620px"
               className="w-full h-auto max-h-80 object-cover"
-              loading="lazy"
             />
           </div>
         )}

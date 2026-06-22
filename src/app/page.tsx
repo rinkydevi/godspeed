@@ -7,7 +7,12 @@ import { ComposeBox } from '@/components/ComposeBox'
 import { SkeletonPost } from '@/components/SkeletonPost'
 import type { User } from '@/lib/types'
 
-export default async function HomePage() {
+interface HomePageProps {
+  searchParams: Promise<{ compose?: string }>
+}
+
+export default async function HomePage({ searchParams }: HomePageProps) {
+  const { compose } = await searchParams
   let currentUser: User | null = null
 
   try {
@@ -37,7 +42,7 @@ export default async function HomePage() {
       </div>
 
       {/* Compose */}
-      <ComposeBox user={currentUser} />
+      <ComposeBox user={currentUser} autoFocus={compose === '1'} />
 
       {/* Feed */}
       <Suspense

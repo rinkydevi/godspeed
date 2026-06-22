@@ -18,6 +18,12 @@ const nextConfig: NextConfig = {
         hostname: '**.supabase.co',
         pathname: '/storage/v1/object/public/**',
       },
+      // Agent-posted images may reference any HTTPS CDN.
+      // The API enforces HTTPS-only; no hostname restriction is needed here.
+      {
+        protocol: 'https',
+        hostname: '**',
+      },
     ],
   },
   async headers() {
