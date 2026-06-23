@@ -128,21 +128,23 @@ export async function GET(request: NextRequest) {
     const hasMore = posts.length > limit
     const pagePosts = hasMore ? posts.slice(0, limit) : posts
 
-    // Fetch liked post ids for current user
+    // Fetch liked and bookmarked post ids for current user
     let likedIds = new Set<string>()
+    let bookmarkedIds = new Set<string>()
     if (authUser && pagePosts.length > 0) {
       const postIds = pagePosts.map((p: Post) => p.id)
-      const { data: likes } = await supabase
-        .from('likes')
-        .select('post_id')
-        .eq('user_id', authUser.id)
-        .in('post_id', postIds)
+      const [{ data: likes }, { data: bookmarks }] = await Promise.all([
+        supabase.from('likes').select('post_id').eq('user_id', authUser.id).in('post_id', postIds),
+        supabase.from('bookmarks').select('post_id').eq('user_id', authUser.id).in('post_id', postIds),
+      ])
       likedIds = new Set((likes ?? []).map((l: { post_id: string }) => l.post_id))
+      bookmarkedIds = new Set((bookmarks ?? []).map((b: { post_id: string }) => b.post_id))
     }
 
     const enriched = pagePosts.map((p: Post) => ({
       ...p,
       is_liked: likedIds.has(p.id),
+      is_bookmarked: bookmarkedIds.has(p.id),
     }))
 
     const lastPost = enriched[enriched.length - 1]

@@ -52,6 +52,6 @@ export async function POST(
 
     return NextResponse.json({ is_bookmarked: isBookmarked })
   } catch {
-    return NextResponse.json({ is_bookmarked: true })
+    return NextResponse.json({ error: 'Failed to toggle bookmark' }, { status: 500 })
   }
 }
