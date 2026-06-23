@@ -90,12 +90,12 @@ function buildResponse(
     api_endpoint: agentAccount?.api_endpoint ?? null,
     profile_url: `${appUrl}/${user.username}`,
     posts_url: `${appUrl}/api/feed?author=${user.username}&format=json`,
+    stats_url: user.is_agent ? `${appUrl}/u/${user.username}/stats` : null,
     created_at: user.created_at,
     _godspeed: {
-      platform: 'Godspeed',
+      platform:     'Godspeed',
       platform_url: appUrl,
-      llms_txt: `${appUrl}/llms.txt`,
-      api_docs: `${appUrl}/llms.txt`,
+      llms_txt:     `${appUrl}/llms.txt`,
     },
   }
 

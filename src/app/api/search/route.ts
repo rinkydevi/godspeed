@@ -3,14 +3,25 @@ import type { NextRequest } from 'next/server'
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import { mockPosts, mockUsers, mockHashtags } from '@/lib/mock-data'
+import { rateLimitIP } from '@/lib/rate-limit'
 
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url)
-  const q = searchParams.get('q')?.trim() ?? ''
+  const q    = searchParams.get('q')?.trim() ?? ''
   const type = searchParams.get('type') ?? 'all'
 
   if (!q) {
     return NextResponse.json({ posts: [], users: [], hashtags: [] })
+  }
+
+  // 20 searches/min per IP (no-op when Upstash not configured)
+  const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ?? 'anon'
+  const rl = await rateLimitIP(`search:${ip}`, 20, 60)
+  if (!rl.success) {
+    return NextResponse.json(
+      { error: 'Too many search requests. Please slow down.' },
+      { status: 429, headers: { 'Retry-After': String(rl.retryAfter) } }
+    )
   }
 
   try {
@@ -33,31 +44,42 @@ export async function GET(request: NextRequest) {
     )
 
     const results: { posts: unknown[]; users: unknown[]; hashtags: unknown[] } = {
-      posts: [],
-      users: [],
-      hashtags: [],
+      posts: [], users: [], hashtags: [],
     }
 
-    // Strip leading # for hashtag search
-    const cleanQ = q.startsWith('#') ? q.slice(1) : q
-    const searchTerm = `%${cleanQ}%`
+    const cleanQ      = q.startsWith('#') ? q.slice(1) : q
+    const trigram     = `%${cleanQ}%`
 
     if (type === 'posts' || type === 'all') {
-      const { data } = await supabase
+      // Full-text search first (stemming, phrase support, negation via websearch syntax)
+      const { data: ftsPosts } = await supabase
         .from('posts_with_counts')
         .select('*, author:users!posts_author_id_fkey(*)')
-        .ilike('content', searchTerm)
+        .textSearch('content', cleanQ, { type: 'websearch', config: 'english' })
         .is('deleted_at', null)
-        .order('created_at', { ascending: false })
         .limit(20)
-      results.posts = data ?? []
+
+      if (ftsPosts && ftsPosts.length > 0) {
+        results.posts = ftsPosts
+      } else {
+        // Fallback: trigram ilike (catches partial words, typos)
+        const { data: ilikePosts } = await supabase
+          .from('posts_with_counts')
+          .select('*, author:users!posts_author_id_fkey(*)')
+          .ilike('content', trigram)
+          .is('deleted_at', null)
+          .order('created_at', { ascending: false })
+          .limit(20)
+        results.posts = ilikePosts ?? []
+      }
     }
 
     if (type === 'users' || type === 'all') {
+      // Trigram ilike — uses gin_trgm_ops indexes on username, display_name, bio
       const { data } = await supabase
         .from('users')
         .select('*')
-        .or(`username.ilike.${searchTerm},display_name.ilike.${searchTerm},bio.ilike.${searchTerm}`)
+        .or(`username.ilike.${trigram},display_name.ilike.${trigram},bio.ilike.${trigram}`)
         .order('created_at', { ascending: false })
         .limit(20)
       results.users = data ?? []
@@ -67,7 +89,7 @@ export async function GET(request: NextRequest) {
       const { data } = await supabase
         .from('hashtags')
         .select('name, post_count')
-        .ilike('name', searchTerm)
+        .ilike('name', trigram)
         .order('post_count', { ascending: false })
         .limit(20)
       results.hashtags = data ?? []
@@ -75,8 +97,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json(results)
   } catch {
-    // Mock fallback
-    const lq = q.toLowerCase().replace(/^#/, '')
+    const lq = cleanQ(q).toLowerCase()
 
     const posts = mockPosts
       .filter(p => p.content.toLowerCase().includes(lq))
@@ -96,4 +117,8 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({ posts, users, hashtags })
   }
+}
+
+function cleanQ(q: string) {
+  return q.replace(/^#/, '')
 }

@@ -3,6 +3,8 @@ import './globals.css'
 import { Providers } from '@/components/providers'
 import { Sidebar } from '@/components/Sidebar'
 import { MobileNav } from '@/components/MobileNav'
+import { Analytics } from '@vercel/analytics/next'
+import { SpeedInsights } from '@vercel/speed-insights/next'
 
 export const metadata: Metadata = {
   title: 'Godspeed — The social network for AI agents',
@@ -26,26 +28,9 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="en" suppressHydrationWarning>
-      <head>
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `
-              (function() {
-                try {
-                  var theme = localStorage.getItem('theme');
-                  if (theme !== 'light') {
-                    document.documentElement.classList.add('dark');
-                  }
-                } catch(e) {
-                  document.documentElement.classList.add('dark');
-                }
-              })();
-            `,
-          }}
-        />
-      </head>
-      <body className="bg-white dark:bg-[#101010] text-black dark:text-[#f1f1f1] min-h-screen antialiased">
+    <html lang="en" className="dark">
+      <head />
+      <body className="bg-[#101010] text-[#f1f1f1] min-h-screen antialiased">
         <Providers>
           <div className="flex min-h-screen">
             {/* Desktop sidebar */}
@@ -62,6 +47,8 @@ export default function RootLayout({
           {/* Mobile bottom nav */}
           <MobileNav />
         </Providers>
+        <Analytics />
+        <SpeedInsights />
       </body>
     </html>
   )

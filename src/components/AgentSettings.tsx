@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { Bot, ExternalLink, X } from 'lucide-react'
+import { Bot, ExternalLink, X, Trash2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import type { AgentProfile } from '@/lib/types'
 
@@ -21,6 +21,9 @@ export function AgentSettings({ initialAgents }: AgentSettingsProps) {
   const [copied, setCopied] = useState(false)
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
+
+  const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null)
+  const [deleting, setDeleting] = useState(false)
 
   const [form, setForm] = useState({
     username: '',
@@ -85,6 +88,19 @@ export function AgentSettings({ initialAgents }: AgentSettingsProps) {
     await navigator.clipboard.writeText(createdKey.apiKey)
     setCopied(true)
     setTimeout(() => setCopied(false), 2000)
+  }
+
+  async function handleDelete(agentId: string) {
+    setDeleting(true)
+    try {
+      const res = await fetch(`/api/agent/accounts/${agentId}`, { method: 'DELETE' })
+      if (res.ok) {
+        setAgents(prev => prev.filter(a => a.id !== agentId))
+        setDeleteConfirm(null)
+      }
+    } finally {
+      setDeleting(false)
+    }
   }
 
   return (
@@ -261,15 +277,24 @@ export function AgentSettings({ initialAgents }: AgentSettingsProps) {
                 <p className="text-[15px] font-semibold text-[#f1f1f1]">{agent.display_name}</p>
                 <p className="text-[13px] text-[#777]">@{agent.username}</p>
               </div>
-              <a
-                href={`/${agent.username}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-[#555] hover:text-[#f1f1f1] transition-colors"
-                aria-label="View profile"
-              >
-                <ExternalLink className="w-4 h-4" />
-              </a>
+              <div className="flex items-center gap-2">
+                <a
+                  href={`/${agent.username}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-[#555] hover:text-[#f1f1f1] transition-colors"
+                  aria-label="View profile"
+                >
+                  <ExternalLink className="w-4 h-4" />
+                </a>
+                <button
+                  onClick={() => setDeleteConfirm(agent.id)}
+                  className="text-[#555] hover:text-rose-400 transition-colors"
+                  aria-label="Delete agent"
+                >
+                  <Trash2 className="w-4 h-4" />
+                </button>
+              </div>
             </div>
             {agent.bio && (
               <p className="text-[13px] text-[#999] mt-2 leading-relaxed">{agent.bio}</p>
@@ -289,6 +314,29 @@ export function AgentSettings({ initialAgents }: AgentSettingsProps) {
             <p className="text-[11px] text-[#444] mt-3">
               API key was shown once at creation. To rotate, delete and recreate.
             </p>
+
+            {/* Inline delete confirmation */}
+            {deleteConfirm === agent.id && (
+              <div className="mt-3 pt-3 border-t border-[#2a2a2a] flex items-center justify-between gap-3">
+                <p className="text-[12px] text-rose-400">Delete @{agent.username}? This cannot be undone.</p>
+                <div className="flex gap-2 flex-shrink-0">
+                  <button
+                    onClick={() => setDeleteConfirm(null)}
+                    disabled={deleting}
+                    className="px-3 py-1.5 rounded-lg border border-[#2a2a2a] text-[12px] text-[#777] hover:text-[#f1f1f1] hover:border-[#444] transition-all"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={() => handleDelete(agent.id)}
+                    disabled={deleting}
+                    className="px-3 py-1.5 rounded-lg bg-rose-500 text-[12px] text-white font-semibold hover:bg-rose-600 transition-colors disabled:opacity-50"
+                  >
+                    {deleting ? 'Deleting…' : 'Delete'}
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         ))}
       </div>

@@ -29,7 +29,25 @@ export type Post = {
   repost_count?: number
   is_liked?: boolean
   is_reposted?: boolean
+  is_bookmarked?: boolean
   replies?: Post[]
+}
+
+export type List = {
+  id: string
+  owner_id: string
+  name: string
+  description: string | null
+  is_public: boolean
+  created_at: string
+  member_count?: number
+}
+
+export type ListMember = {
+  list_id: string
+  user_id: string
+  added_at: string
+  user?: User
 }
 
 export type Notification = {

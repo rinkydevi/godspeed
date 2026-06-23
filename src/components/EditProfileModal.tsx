@@ -1,8 +1,9 @@
 'use client'
 
-import { useState } from 'react'
-import { X } from 'lucide-react'
+import { useState, useRef } from 'react'
+import { X, Upload, Loader2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { Avatar } from './Avatar'
 import type { User } from '@/lib/types'
 
 interface EditProfileModalProps {
@@ -18,6 +19,33 @@ export function EditProfileModal({ user, onClose, onSuccess }: EditProfileModalP
   const [avatarUrl, setAvatarUrl] = useState(user.avatar_url ?? '')
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [uploading, setUploading] = useState(false)
+  const [uploadError, setUploadError] = useState<string | null>(null)
+  const avatarInputRef = useRef<HTMLInputElement>(null)
+
+  async function handleAvatarChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (!file) return
+    setUploadError(null)
+    setUploading(true)
+    try {
+      const presignRes = await fetch('/api/upload', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ filename: file.name, contentType: file.type, size: file.size, bucket: 'avatars' }),
+      })
+      const presignData = await presignRes.json().catch(() => ({}))
+      if (!presignRes.ok) { setUploadError(presignData.error ?? 'Upload failed'); return }
+      const uploadRes = await fetch(presignData.uploadUrl, { method: 'PUT', headers: { 'Content-Type': file.type }, body: file })
+      if (!uploadRes.ok) { setUploadError('Upload failed — please try again'); return }
+      setAvatarUrl(presignData.publicUrl)
+    } catch {
+      setUploadError('Upload failed — please try again')
+    } finally {
+      setUploading(false)
+      e.target.value = ''
+    }
+  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -70,6 +98,31 @@ export function EditProfileModal({ user, onClose, onSuccess }: EditProfileModalP
         </div>
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+          {/* Avatar */}
+          <div className="flex items-center gap-4">
+            <div className="relative">
+              <Avatar src={avatarUrl || null} name={displayName || user.display_name} size={56} />
+              {uploading && (
+                <div className="absolute inset-0 rounded-full bg-black/60 flex items-center justify-center">
+                  <Loader2 className="w-5 h-5 text-white animate-spin" />
+                </div>
+              )}
+            </div>
+            <div>
+              <button
+                type="button"
+                onClick={() => avatarInputRef.current?.click()}
+                disabled={uploading}
+                className="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-[#2a2a2a] text-[13px] text-[#f1f1f1] hover:bg-[#1e1e1e] transition-colors disabled:opacity-50"
+              >
+                <Upload className="w-3.5 h-3.5" />
+                Change photo
+              </button>
+              {uploadError && <p className="text-[11px] text-rose-500 mt-1">{uploadError}</p>}
+            </div>
+            <input ref={avatarInputRef} type="file" accept="image/jpeg,image/png,image/gif,image/webp" className="hidden" onChange={handleAvatarChange} />
+          </div>
+
           {/* Display name */}
           <div>
             <label className="block text-[12px] text-[#777] mb-1.5 font-medium">
@@ -117,20 +170,6 @@ export function EditProfileModal({ user, onClose, onSuccess }: EditProfileModalP
               value={website}
               onChange={(e) => setWebsite(e.target.value)}
               placeholder="https://yoursite.com"
-              className="w-full bg-[#1a1a1a] border border-[#2a2a2a] rounded-xl px-3.5 py-2.5 text-[14px] text-[#f1f1f1] placeholder-[#555] outline-none focus:border-[#444] transition-colors"
-            />
-          </div>
-
-          {/* Avatar URL */}
-          <div>
-            <label className="block text-[12px] text-[#777] mb-1.5 font-medium">
-              Avatar URL
-            </label>
-            <input
-              type="url"
-              value={avatarUrl}
-              onChange={(e) => setAvatarUrl(e.target.value)}
-              placeholder="https://example.com/avatar.png"
               className="w-full bg-[#1a1a1a] border border-[#2a2a2a] rounded-xl px-3.5 py-2.5 text-[14px] text-[#f1f1f1] placeholder-[#555] outline-none focus:border-[#444] transition-colors"
             />
           </div>

@@ -1,8 +1,11 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
+import { after } from 'next/server'
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import { extractHashtags } from '@/lib/utils'
+import { deliverWebhooks } from '@/lib/webhook-delivery'
+import { rateLimit } from '@/lib/rate-limit'
 
 export async function POST(request: NextRequest) {
   try {
@@ -54,18 +57,12 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Rate limit check: 30 posts/hr for humans
-    const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000).toISOString()
-    const { count } = await supabase
-      .from('posts')
-      .select('id', { count: 'exact', head: true })
-      .eq('author_id', user.id)
-      .gte('created_at', oneHourAgo)
-
-    if ((count ?? 0) >= 30) {
+    // Rate limit: 30 posts/hr for humans (Redis when available, DB otherwise)
+    const rl = await rateLimit(`human-post:${user.id}`, user.id, supabase, 30, 3600)
+    if (!rl.success) {
       return NextResponse.json(
         { error: 'Rate limit exceeded: 30 posts per hour for human accounts' },
-        { status: 429 }
+        { status: 429, headers: { 'Retry-After': String(rl.retryAfter) } } as never
       )
     }
 
@@ -103,13 +100,19 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Create mention notifications
+    // Create mention notifications and fire webhooks for agent mentions
     const mentions = trimmed.match(/@(\w+)/g)?.map(m => m.slice(1)) ?? []
-    if (mentions.length > 0 && reply_to_id === undefined) {
+    if (mentions.length > 0) {
+      const { data: author } = await supabase
+        .from('users')
+        .select('username, display_name, is_agent')
+        .eq('id', user.id)
+        .single()
+
       for (const mentionUsername of mentions) {
         const { data: mentionedUser } = await supabase
           .from('users')
-          .select('id')
+          .select('id, is_agent')
           .eq('username', mentionUsername)
           .single()
 
@@ -120,6 +123,24 @@ export async function POST(request: NextRequest) {
             actor_id: user.id,
             post_id: post.id,
           })
+
+          if (mentionedUser.is_agent) {
+            const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'https://godspeed.so'
+            after(async () => {
+              await deliverWebhooks(mentionUsername, 'mention', {
+                post: {
+                  id:      post.id,
+                  content: post.content,
+                  url:     `${appUrl}/${author?.username}/${post.id}`,
+                },
+                author: {
+                  username:     author?.username ?? '',
+                  display_name: author?.display_name ?? '',
+                  is_agent:     author?.is_agent ?? false,
+                },
+              })
+            })
+          }
         }
       }
     }

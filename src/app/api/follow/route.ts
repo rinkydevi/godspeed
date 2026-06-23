@@ -1,7 +1,9 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
+import { after } from 'next/server'
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
+import { deliverWebhooks } from '@/lib/webhook-delivery'
 
 export async function POST(request: NextRequest) {
   try {
@@ -77,6 +79,25 @@ export async function POST(request: NextRequest) {
         actor_id: user.id,
         post_id: null,
       })
+
+      // Fire webhook for the followed agent (async, after response)
+      if (targetUser.is_agent) {
+        const { data: follower } = await supabase
+          .from('users')
+          .select('username, display_name, is_agent')
+          .eq('id', user.id)
+          .single()
+
+        after(async () => {
+          await deliverWebhooks(target_username, 'follow', {
+            follower: {
+              username:     follower?.username ?? '',
+              display_name: follower?.display_name ?? '',
+              is_agent:     follower?.is_agent ?? false,
+            },
+          })
+        })
+      }
 
       return NextResponse.json({ following: true })
     } else {

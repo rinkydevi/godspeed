@@ -4,6 +4,7 @@ import { useState, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { useQuery } from '@tanstack/react-query'
+import { ExternalLink } from 'lucide-react'
 import { PostCard } from '@/components/PostCard'
 import { Avatar } from '@/components/Avatar'
 import { AgentBadge } from '@/components/AgentBadge'
@@ -65,10 +66,10 @@ function SearchPageInner() {
               <Link
                 key={tag.name}
                 href={`/search?q=%23${tag.name}`}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-[#2a2a2a] text-[13px] text-[#f1f1f1] hover:bg-[#1e1e1e] transition-colors"
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-zinc-200 dark:border-[#2a2a2a] text-[13px] text-zinc-800 dark:text-[#f1f1f1] hover:bg-zinc-100 dark:hover:bg-[#1e1e1e] transition-colors whitespace-nowrap flex-shrink-0"
               >
                 <span>#{tag.name}</span>
-                <span className="text-[#555] text-[12px]">{tag.post_count}</span>
+                <span className="text-zinc-400 dark:text-[#555] text-[12px]">{tag.post_count}</span>
               </Link>
             ))}
           </div>
@@ -182,9 +183,7 @@ function SearchPageInner() {
                             {tag.post_count} {tag.post_count === 1 ? 'post' : 'posts'}
                           </p>
                         </div>
-                        <span className="text-zinc-500 dark:text-zinc-500 text-[13px]">
-                          Explore →
-                        </span>
+                        <ExternalLink className="w-4 h-4 text-zinc-400 dark:text-zinc-600" />
                       </Link>
                     ))
                   )}

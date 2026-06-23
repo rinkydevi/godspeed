@@ -1,10 +1,11 @@
 'use client'
 
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import Link from 'next/link'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { ImagePlus, X, Loader2 } from 'lucide-react'
 import { Avatar } from './Avatar'
+import { LinkPreview } from './LinkPreview'
 import { cn } from '@/lib/utils'
 import type { User } from '@/lib/types'
 
@@ -15,6 +16,9 @@ interface ComposeBoxProps {
   onSuccess?: () => void
   autoFocus?: boolean
 }
+
+const GODSPEED_URL_RE =
+  /(https?:\/\/[^/\s]+)?\/([a-zA-Z0-9_]+)\/([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})/
 
 export function ComposeBox({
   user,
@@ -28,10 +32,18 @@ export function ComposeBox({
   const [imageUrl, setImageUrl] = useState<string | null>(null)
   const [uploading, setUploading] = useState(false)
   const [uploadError, setUploadError] = useState<string | null>(null)
+  const [previewPostId, setPreviewPostId] = useState<string | null>(null)
+  const [dismissedPreviewId, setDismissedPreviewId] = useState<string | null>(null)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const queryClient = useQueryClient()
   const MAX_CHARS = 500
+
+  useEffect(() => {
+    const match = GODSPEED_URL_RE.exec(content)
+    const found = match ? match[3] : null
+    setPreviewPostId(found)
+  }, [content])
 
   const mutation = useMutation({
     mutationFn: async () => {
@@ -53,6 +65,8 @@ export function ComposeBox({
     onSuccess: () => {
       setContent('')
       setImageUrl(null)
+      setPreviewPostId(null)
+      setDismissedPreviewId(null)
       queryClient.invalidateQueries({ queryKey: ['feed'] })
       queryClient.invalidateQueries({ queryKey: ['post'] })
       onSuccess?.()
@@ -67,7 +81,6 @@ export function ComposeBox({
     setUploading(true)
 
     try {
-      // Step 1: get a presigned upload URL from the server (auth + validation only)
       const presignRes = await fetch('/api/upload', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -79,7 +92,6 @@ export function ComposeBox({
         return
       }
 
-      // Step 2: PUT file directly to Supabase Storage — server never sees the bytes
       const uploadRes = await fetch(presignData.uploadUrl, {
         method: 'PUT',
         headers: { 'Content-Type': file.type },
@@ -119,6 +131,8 @@ export function ComposeBox({
     }
   }
 
+  const showPreview = !!previewPostId && previewPostId !== dismissedPreviewId
+
   return (
     <div className="border-b border-[#1e1e1e] px-4 py-4">
       <div className="flex gap-3">
@@ -150,7 +164,13 @@ export function ComposeBox({
             )}
           />
 
-          {/* Image preview */}
+          {showPreview && (
+            <LinkPreview
+              postId={previewPostId}
+              onDismiss={() => setDismissedPreviewId(previewPostId)}
+            />
+          )}
+
           {imageUrl && (
             <div className="relative mt-3 rounded-2xl overflow-hidden border border-zinc-200 dark:border-zinc-800 inline-block">
               {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -171,7 +191,6 @@ export function ComposeBox({
 
           {(focused || content || imageUrl) && (
             <div className="flex items-center justify-between mt-3 pt-3 border-t border-[#1e1e1e]">
-              {/* Left: image attach + char counter */}
               <div className="flex items-center gap-3">
                 {!imageUrl && (
                   <button
@@ -201,7 +220,6 @@ export function ComposeBox({
                 )}
               </div>
 
-              {/* Right: errors + post button */}
               <div className="flex items-center gap-2">
                 {uploadError && (
                   <span className="text-xs text-rose-500">{uploadError}</span>

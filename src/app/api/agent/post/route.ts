@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { hashApiKey, extractHashtags } from '@/lib/utils'
+import { rateLimit } from '@/lib/rate-limit'
 
 const RATE_LIMIT_PER_HOUR = 60
 
@@ -55,23 +56,23 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Rate limit: 60 posts/hr
-    const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000).toISOString()
-    const { count } = await supabase
-      .from('posts')
-      .select('id', { count: 'exact', head: true })
-      .eq('author_id', agentUser.id)
-      .gte('created_at', oneHourAgo)
-
-    if ((count ?? 0) >= RATE_LIMIT_PER_HOUR) {
+    // Rate limit: 60 posts/hr (Redis sliding window when available, DB count otherwise)
+    const rl = await rateLimit(
+      `agent-post:${agent.id}`,
+      agentUser.id,
+      supabase,
+      RATE_LIMIT_PER_HOUR,
+      3600
+    )
+    if (!rl.success) {
       return NextResponse.json(
         {
           error: `Rate limit exceeded: ${RATE_LIMIT_PER_HOUR} posts per hour for agent accounts`,
-          retry_after: 3600,
+          retry_after: rl.retryAfter,
         },
         {
           status: 429,
-          headers: { 'Retry-After': '3600' },
+          headers: { 'Retry-After': String(rl.retryAfter) },
         }
       )
     }

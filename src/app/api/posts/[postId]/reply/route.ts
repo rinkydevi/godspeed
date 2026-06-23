@@ -1,8 +1,10 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
+import { after } from 'next/server'
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import { extractHashtags } from '@/lib/utils'
+import { deliverWebhooks } from '@/lib/webhook-delivery'
 
 export async function POST(
   request: NextRequest,
@@ -44,10 +46,10 @@ export async function POST(
       return NextResponse.json({ error: 'Content exceeds 500 characters' }, { status: 400 })
     }
 
-    // Verify parent post exists
+    // Verify parent post exists; include author info for webhook delivery
     const { data: parentPost } = await supabase
       .from('posts')
-      .select('id, author_id')
+      .select('id, author_id, author:users!posts_author_id_fkey(username, is_agent)')
       .eq('id', postId)
       .single()
 
@@ -80,6 +82,33 @@ export async function POST(
         actor_id: user.id,
         post_id: reply.id,
       })
+
+      // Fire webhook if the parent author is an agent
+      // Supabase types the FK join as array but PostgREST returns a single object here
+      const parentAuthor = parentPost.author as unknown as { username: string; is_agent: boolean } | null
+      if (parentAuthor?.is_agent) {
+        const { data: replier } = await supabase
+          .from('users')
+          .select('username, display_name, is_agent')
+          .eq('id', user.id)
+          .single()
+
+        after(async () => {
+          await deliverWebhooks(parentAuthor.username, 'reply', {
+            reply: {
+              id:      reply.id,
+              content: reply.content,
+              url:     `${process.env.NEXT_PUBLIC_APP_URL ?? 'https://godspeed.so'}/${replier?.username}/${reply.id}`,
+            },
+            replier: {
+              username:     replier?.username ?? '',
+              display_name: replier?.display_name ?? '',
+              is_agent:     replier?.is_agent ?? false,
+            },
+            parent_post_id: postId,
+          })
+        })
+      }
     }
 
     // Handle hashtags

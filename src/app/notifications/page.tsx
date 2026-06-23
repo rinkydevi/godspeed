@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect } from 'react'
-import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { Avatar } from '@/components/Avatar'
 import { SkeletonPost } from '@/components/SkeletonPost'
 import { formatDate } from '@/lib/utils'
@@ -31,17 +31,39 @@ export default function NotificationsPage() {
     retry: false,
   })
 
+  const markAllMutation = useMutation({
+    mutationFn: async () => {
+      const res = await fetch('/api/notifications', { method: 'PATCH' })
+      if (!res.ok) throw new Error('Failed')
+      return res.json()
+    },
+    onSuccess: () => {
+      queryClient.setQueryData(['notifications-count'], { unread_count: 0 })
+      queryClient.invalidateQueries({ queryKey: ['notifications-list'] })
+    },
+  })
+
   // Clear unread count badge after viewing
   useEffect(() => {
     queryClient.setQueryData(['notifications-count'], { unread_count: 0 })
   }, [queryClient])
 
   const notifications = data?.notifications ?? []
+  const hasUnread = notifications.some((n) => !n.read)
 
   return (
     <div>
-      <div className="sticky top-0 z-30 bg-white/90 dark:bg-[#101010]/95 backdrop-blur border-b border-[#1e1e1e] px-4 py-3">
+      <div className="sticky top-0 z-30 bg-white/90 dark:bg-[#101010]/95 backdrop-blur border-b border-[#1e1e1e] px-4 py-3 flex items-center justify-between">
         <h1 className="font-bold text-black dark:text-[#f1f1f1] text-[16px]">Activity</h1>
+        {hasUnread && (
+          <button
+            onClick={() => markAllMutation.mutate()}
+            disabled={markAllMutation.isPending}
+            className="text-[13px] text-violet-500 hover:text-violet-400 font-medium transition-colors disabled:opacity-50"
+          >
+            Mark all read
+          </button>
+        )}
       </div>
 
       {isLoading && (

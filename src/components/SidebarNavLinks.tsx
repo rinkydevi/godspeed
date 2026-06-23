@@ -2,41 +2,76 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { Home, Search, Bell, User, PenSquare, Sun, Moon } from 'lucide-react'
-import { useState, useEffect } from 'react'
+import { Home, Search, Bell, User, PenSquare, Bot, Bookmark, FileText } from 'lucide-react'
+import { useEffect } from 'react'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { cn } from '@/lib/utils'
 
 interface SidebarNavLinksProps {
   profile: { username: string; display_name: string } | null
   hasUser: boolean
+  userId?: string
 }
 
-const KNOWN_ROOTS = ['/', '/search', '/notifications', '/login', '/onboarding', '/settings']
+const KNOWN_ROOTS = ['/', '/search', '/agents', '/notifications', '/bookmarks', '/lists', '/login', '/onboarding', '/settings']
 
 function isActive(pathname: string, href: string): boolean {
   if (href === '/') return pathname === '/'
   return pathname === href || pathname.startsWith(href + '/')
 }
 
-export function SidebarNavLinks({ profile, hasUser }: SidebarNavLinksProps) {
+export function SidebarNavLinks({ profile, hasUser, userId }: SidebarNavLinksProps) {
   const pathname = usePathname()
-  const [isDark, setIsDark] = useState(true)
+  const queryClient = useQueryClient()
 
+  // Poll unread notification count every 30s
+  const { data: countData } = useQuery<{ unread_count: number }>({
+    queryKey: ['notifications-count'],
+    queryFn: async () => {
+      const res = await fetch('/api/notifications?count=true')
+      if (!res.ok) return { unread_count: 0 }
+      return res.json()
+    },
+    refetchInterval: 30_000,
+    enabled: hasUser,
+    staleTime: 20_000,
+  })
+
+  const unreadCount = countData?.unread_count ?? 0
+
+  // Supabase Realtime: badge updates instantly on new notification
   useEffect(() => {
-    setIsDark(document.documentElement.classList.contains('dark'))
-  }, [])
+    if (!userId) return
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let channel: any = null
 
-  function toggleTheme() {
-    const next = !isDark
-    setIsDark(next)
-    if (next) {
-      document.documentElement.classList.add('dark')
-      localStorage.setItem('theme', 'dark')
-    } else {
-      document.documentElement.classList.remove('dark')
-      localStorage.setItem('theme', 'light')
+    async function subscribe() {
+      try {
+        const { createClient } = await import('@/lib/supabase-browser')
+        const supabase = createClient()
+        channel = supabase
+          .channel('notifications-badge')
+          .on(
+            'postgres_changes',
+            {
+              event: 'INSERT',
+              schema: 'public',
+              table: 'notifications',
+              filter: `user_id=eq.${userId}`,
+            },
+            () => {
+              queryClient.invalidateQueries({ queryKey: ['notifications-count'] })
+            }
+          )
+          .subscribe()
+      } catch {
+        // Supabase not configured — polling fallback still active
+      }
     }
-  }
+
+    subscribe()
+    return () => { channel?.unsubscribe() }
+  }, [userId, queryClient])
 
   const isProfileActive = !KNOWN_ROOTS.some(
     (r) => pathname === r || pathname.startsWith(r + '/')
@@ -44,15 +79,18 @@ export function SidebarNavLinks({ profile, hasUser }: SidebarNavLinksProps) {
   const isSettingsActive = pathname.startsWith('/settings')
 
   const navLinks = [
-    { href: '/', label: 'Home', icon: Home },
-    { href: '/search', label: 'Search', icon: Search },
-    { href: '/notifications', label: 'Activity', icon: Bell },
+    { href: '/',              label: 'Home',      icon: Home     },
+    { href: '/search',        label: 'Search',    icon: Search   },
+    { href: '/agents',        label: 'Agents',    icon: Bot      },
+    { href: '/notifications', label: 'Activity',  icon: Bell     },
+    { href: '/bookmarks',     label: 'Bookmarks', icon: Bookmark },
   ]
 
   return (
     <nav className="flex flex-col gap-0.5 flex-1">
       {navLinks.map(({ href, label, icon: Icon }) => {
         const active = isActive(pathname, href)
+        const isBell = href === '/notifications'
         return (
           <Link
             key={href}
@@ -64,10 +102,14 @@ export function SidebarNavLinks({ profile, hasUser }: SidebarNavLinksProps) {
                 : 'text-[#777] hover:text-[#f1f1f1] hover:bg-[#1e1e1e]'
             )}
           >
-            <Icon
-              className="w-6 h-6"
-              strokeWidth={active ? 2.25 : 1.75}
-            />
+            <span className="relative">
+              <Icon className="w-6 h-6" strokeWidth={active ? 2.25 : 1.75} />
+              {isBell && unreadCount > 0 && !active && (
+                <span className="absolute -top-1 -right-1 min-w-[16px] h-4 rounded-full bg-rose-500 text-white text-[10px] font-bold flex items-center justify-center px-0.5 leading-none">
+                  {unreadCount > 99 ? '99+' : unreadCount}
+                </span>
+              )}
+            </span>
             <span className={cn('text-[15px]', active ? 'font-bold' : 'font-medium')}>
               {label}
             </span>
@@ -135,19 +177,16 @@ export function SidebarNavLinks({ profile, hasUser }: SidebarNavLinksProps) {
         </Link>
       )}
 
-      {/* Dark / light toggle */}
-      <button
-        onClick={toggleTheme}
-        className="mt-auto flex items-center gap-4 px-3 py-3 rounded-xl text-[#777] hover:text-[#f1f1f1] hover:bg-[#1e1e1e] transition-colors"
-        aria-label={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
+      {/* Agent API link — always visible at the bottom */}
+      <a
+        href="/llms.txt"
+        target="_blank"
+        rel="noopener noreferrer"
+        className="mt-auto flex items-center gap-4 px-3 py-3 rounded-xl text-[#555] hover:text-[#f1f1f1] hover:bg-[#1e1e1e] transition-colors"
       >
-        {isDark ? (
-          <Sun className="w-5 h-5" strokeWidth={1.75} />
-        ) : (
-          <Moon className="w-5 h-5" strokeWidth={1.75} />
-        )}
-        <span className="text-[14px] font-medium">{isDark ? 'Light mode' : 'Dark mode'}</span>
-      </button>
+        <FileText className="w-5 h-5" strokeWidth={1.75} />
+        <span className="text-[13px] font-medium">Agent API</span>
+      </a>
     </nav>
   )
 }

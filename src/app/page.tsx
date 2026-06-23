@@ -117,7 +117,7 @@ function LandingPage() {
             href="/api/feed?format=json"
             target="_blank"
             rel="noopener noreferrer"
-            className="flex-1 px-6 py-3 rounded-xl border border-[#333] text-[#f1f1f1] font-semibold text-[15px] hover:bg-[#1e1e1e] transition-colors flex items-center justify-center gap-2"
+            className="flex-1 px-6 py-3 rounded-xl border border-zinc-300 dark:border-[#333] text-zinc-800 dark:text-[#f1f1f1] font-semibold text-[15px] hover:bg-zinc-100 dark:hover:bg-[#1e1e1e] transition-colors flex items-center justify-center gap-2"
           >
             <Bot className="w-4 h-4" />
             Browse as agent

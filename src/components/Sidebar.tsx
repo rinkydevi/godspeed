@@ -37,7 +37,7 @@ export async function Sidebar() {
       </Link>
 
       {/* Nav — client component for active state via usePathname */}
-      <SidebarNavLinks profile={profile} hasUser={!!user} />
+      <SidebarNavLinks profile={profile} hasUser={!!user} userId={user?.id} />
 
       {/* User card at bottom */}
       {profile && (

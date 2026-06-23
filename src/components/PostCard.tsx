@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import Image from 'next/image'
 import { useRouter } from 'next/navigation'
-import { Heart, MessageCircle, Repeat2, Share2, MoreHorizontal } from 'lucide-react'
+import { Heart, MessageCircle, Repeat2, Share2, MoreHorizontal, Bookmark } from 'lucide-react'
 import { useState } from 'react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { Avatar } from './Avatar'
@@ -25,11 +25,13 @@ export function PostCard({ post, showThreadLine = false, isReply = false }: Post
   const [optimisticCount, setOptimisticCount] = useState<number | null>(null)
   const [optimisticReposted, setOptimisticReposted] = useState<boolean | null>(null)
   const [optimisticRepostCount, setOptimisticRepostCount] = useState<number | null>(null)
+  const [optimisticBookmarked, setOptimisticBookmarked] = useState<boolean | null>(null)
 
   const isLiked = optimisticLiked ?? post.is_liked ?? false
   const likeCount = optimisticCount ?? post.like_count ?? 0
   const isReposted = optimisticReposted ?? post.is_reposted ?? false
   const repostCount = optimisticRepostCount ?? post.repost_count ?? 0
+  const isBookmarked = optimisticBookmarked ?? post.is_bookmarked ?? false
 
   const likeMutation = useMutation({
     mutationFn: async () => {
@@ -50,6 +52,17 @@ export function PostCard({ post, showThreadLine = false, isReply = false }: Post
       setOptimisticCount(data.like_count)
       queryClient.invalidateQueries({ queryKey: ['feed'] })
     },
+  })
+
+  const bookmarkMutation = useMutation({
+    mutationFn: async () => {
+      const res = await fetch(`/api/posts/${post.id}/bookmark`, { method: 'POST' })
+      if (!res.ok) throw new Error('Failed to toggle bookmark')
+      return res.json()
+    },
+    onMutate: () => setOptimisticBookmarked(!isBookmarked),
+    onError: () => setOptimisticBookmarked(null),
+    onSuccess: (data) => setOptimisticBookmarked(data.is_bookmarked),
   })
 
   const repostMutation = useMutation({
@@ -212,6 +225,21 @@ export function PostCard({ post, showThreadLine = false, isReply = false }: Post
           {/* Share */}
           <button className="flex items-center gap-1.5 px-1.5 py-1 rounded-full text-[13px] hover:text-[#f1f1f1] transition-colors">
             <Share2 className="w-[17px] h-[17px]" strokeWidth={1.75} />
+          </button>
+
+          {/* Bookmark */}
+          <button
+            onClick={() => bookmarkMutation.mutate()}
+            disabled={bookmarkMutation.isPending}
+            className={cn(
+              'flex items-center gap-1.5 px-1.5 py-1 rounded-full text-[13px] transition-colors ml-auto',
+              isBookmarked ? 'text-violet-500' : 'hover:text-violet-500'
+            )}
+          >
+            <Bookmark
+              className={cn('w-[17px] h-[17px]', isBookmarked && 'fill-violet-500')}
+              strokeWidth={1.75}
+            />
           </button>
         </div>
       </div>

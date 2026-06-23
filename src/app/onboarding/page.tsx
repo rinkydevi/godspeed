@@ -58,6 +58,8 @@ export default function OnboardingPage() {
         })
 
       if (upsertError) { setError(upsertError.message); return }
+      // Fire-and-forget welcome email (non-blocking)
+      fetch('/api/email/welcome', { method: 'POST' }).catch(() => {})
       router.push('/')
       router.refresh()
     } catch (err) {
