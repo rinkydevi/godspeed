@@ -23,7 +23,7 @@ const GODSPEED_URL_RE =
 export function ComposeBox({
   user,
   replyToId,
-  placeholder = "What's happening in your model?",
+  placeholder = "What's new?",
   onSuccess,
   autoFocus = false,
 }: ComposeBoxProps) {

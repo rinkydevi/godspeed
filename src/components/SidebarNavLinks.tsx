@@ -79,41 +79,53 @@ export function SidebarNavLinks({ profile, hasUser, userId }: SidebarNavLinksPro
   const isSettingsActive = pathname.startsWith('/settings')
 
   const navLinks = [
-    { href: '/',              label: 'Home',      icon: Home     },
+    { href: '/',              label: 'For you',   icon: Home     },
     { href: '/search',        label: 'Search',    icon: Search   },
     { href: '/agents',        label: 'Agents',    icon: Bot      },
     { href: '/notifications', label: 'Activity',  icon: Bell     },
-    { href: '/bookmarks',     label: 'Bookmarks', icon: Bookmark },
+    { href: '/bookmarks',     label: 'Saved',     icon: Bookmark },
   ]
 
   return (
     <nav className="flex flex-col gap-0.5 flex-1">
-      {navLinks.map(({ href, label, icon: Icon }) => {
+      {navLinks.map(({ href, label, icon: Icon }, idx) => {
         const active = isActive(pathname, href)
         const isBell = href === '/notifications'
         return (
-          <Link
-            key={href}
-            href={href}
-            className={cn(
-              'flex items-center gap-3 px-3 py-2.5 rounded-xl transition-colors',
-              active
-                ? 'text-[#f1f1f1] bg-[#1a1a1a]'
-                : 'text-[#888] hover:text-[#f1f1f1] hover:bg-[#1a1a1a]'
-            )}
-          >
-            <span className="relative flex-shrink-0">
-              <Icon className="w-[22px] h-[22px]" strokeWidth={active ? 2.25 : 1.75} />
-              {isBell && unreadCount > 0 && !active && (
-                <span className="absolute -top-1 -right-1 min-w-[15px] h-[15px] rounded-full bg-rose-500 text-white text-[9px] font-bold flex items-center justify-center px-0.5 leading-none">
-                  {unreadCount > 99 ? '99+' : unreadCount}
-                </span>
+          <>
+            <Link
+              key={href}
+              href={href}
+              className={cn(
+                'flex items-center gap-3 px-3 py-2.5 rounded-xl transition-colors',
+                active
+                  ? 'text-[#f1f1f1] bg-[#1a1a1a]'
+                  : 'text-[#888] hover:text-[#f1f1f1] hover:bg-[#1a1a1a]'
               )}
-            </span>
-            <span className={cn('text-[15px]', active ? 'font-semibold text-[#f1f1f1]' : 'font-medium')}>
-              {label}
-            </span>
-          </Link>
+            >
+              <span className="relative flex-shrink-0">
+                <Icon className="w-[22px] h-[22px]" strokeWidth={active ? 2.25 : 1.75} />
+                {isBell && unreadCount > 0 && !active && (
+                  <span className="absolute -top-1 -right-1 min-w-[15px] h-[15px] rounded-full bg-rose-500 text-white text-[9px] font-bold flex items-center justify-center px-0.5 leading-none">
+                    {unreadCount > 99 ? '99+' : unreadCount}
+                  </span>
+                )}
+              </span>
+              <span className={cn('text-[15px]', active ? 'font-semibold text-[#f1f1f1]' : 'font-medium')}>
+                {label}
+              </span>
+            </Link>
+            {idx === 0 && hasUser && (
+              <Link
+                key="new-thread"
+                href="/?compose=1"
+                className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-[#888] hover:text-[#f1f1f1] hover:bg-[#1a1a1a] transition-colors"
+              >
+                <PenSquare className="w-[22px] h-[22px] flex-shrink-0" strokeWidth={1.75} />
+                <span className="text-[15px] font-medium">New thread</span>
+              </Link>
+            )}
+          </>
         )
       })}
 
@@ -160,15 +172,7 @@ export function SidebarNavLinks({ profile, hasUser, userId }: SidebarNavLinksPro
         <span className="text-[14px] font-medium">Agent posts</span>
       </Link>
 
-      {hasUser ? (
-        <Link
-          href="/?compose=1"
-          className="mt-3 flex items-center gap-3 px-3 py-2.5 rounded-xl text-[#888] hover:text-[#f1f1f1] hover:bg-[#1a1a1a] transition-colors"
-        >
-          <PenSquare className="w-[22px] h-[22px] flex-shrink-0" strokeWidth={1.75} />
-          <span className="text-[15px] font-medium">New thread</span>
-        </Link>
-      ) : (
+      {!hasUser && (
         <Link
           href="/login"
           className="mt-3 mx-1 flex items-center justify-center py-2.5 rounded-xl border border-[#333] text-white font-semibold text-[14px] hover:bg-[#1a1a1a] transition-colors"

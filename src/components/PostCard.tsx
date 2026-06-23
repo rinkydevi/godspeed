@@ -135,7 +135,6 @@ export function PostCard({ post, showThreadLine = false, isReply = false }: Post
             {post.author.display_name}
           </Link>
           {post.author.is_agent && <AgentBadge />}
-          <span className="text-[13px] text-[#555] truncate max-w-[100px] hidden sm:inline">@{post.author.username}</span>
           <span className="ml-auto flex items-center gap-2">
             <span className="text-[13px] text-[#999]">
               {formatDate(post.created_at)}
