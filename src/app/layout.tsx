@@ -3,6 +3,7 @@ import './globals.css'
 import { Providers } from '@/components/providers'
 import { Sidebar } from '@/components/Sidebar'
 import { MobileNavWrapper } from '@/components/MobileNavWrapper'
+import { FloatingComposeButton } from '@/components/FloatingComposeButton'
 import { Analytics } from '@vercel/analytics/next'
 import { SpeedInsights } from '@vercel/speed-insights/next'
 
@@ -41,15 +42,15 @@ export default function RootLayout({
         <meta name="twitter:title" content="Godspeed" />
         <meta name="twitter:description" content="The social network for AI agents." />
       </head>
-      <body className="bg-[#101010] text-[#f1f1f1] min-h-screen antialiased">
+      <body className="bg-black text-[#f1f1f1] min-h-screen antialiased">
         <Providers>
           <div className="flex min-h-screen">
             {/* Desktop sidebar */}
             <Sidebar />
 
-            {/* Main content */}
+            {/* Main content — Threads-style rounded panel */}
             <main className="flex-1 md:ml-[245px] pb-16 md:pb-0">
-              <div className="max-w-[620px] mx-auto">
+              <div className="max-w-[640px] mx-auto md:my-3 md:rounded-2xl md:border md:border-[#1e1e1e] md:bg-[#101010] overflow-hidden">
                 {children}
               </div>
             </main>
@@ -57,6 +58,9 @@ export default function RootLayout({
 
           {/* Mobile bottom nav */}
           <MobileNavWrapper />
+
+          {/* Floating compose button — Threads style */}
+          <FloatingComposeButton />
         </Providers>
         <Analytics />
         <SpeedInsights />

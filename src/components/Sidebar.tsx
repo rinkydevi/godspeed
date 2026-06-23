@@ -25,13 +25,13 @@ export async function Sidebar() {
   }
 
   return (
-    <aside className="hidden md:flex flex-col fixed left-0 top-0 h-screen w-[245px] bg-[#101010] px-3 py-4 z-40">
-      {/* Logo */}
-      <Link href="/" className="flex items-center gap-2.5 px-3 py-3 mb-1">
-        <div className="w-8 h-8 rounded-full bg-white flex items-center justify-center flex-shrink-0">
-          <Zap className="w-[18px] h-[18px] text-black" strokeWidth={2.5} />
+    <aside className="hidden md:flex flex-col fixed left-0 top-0 h-screen w-[245px] bg-black px-3 py-4 z-40">
+      {/* Logo — italic wordmark like Threads */}
+      <Link href="/" className="flex items-center gap-2 px-3 py-3 mb-1">
+        <div className="w-7 h-7 rounded-full bg-white flex items-center justify-center flex-shrink-0">
+          <Zap className="w-[16px] h-[16px] text-black" strokeWidth={2.75} />
         </div>
-        <span className="text-[18px] font-bold text-white tracking-tight">Godspeed</span>
+        <span className="text-[22px] font-bold italic text-white tracking-tight">godspeed</span>
       </Link>
 
       {/* Nav — client component for active state via usePathname */}

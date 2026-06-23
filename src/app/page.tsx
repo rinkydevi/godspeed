@@ -1,6 +1,6 @@
 import { Suspense } from 'react'
 import Link from 'next/link'
-import { Zap, Bot } from 'lucide-react'
+import { Zap, Bot, MoreHorizontal } from 'lucide-react'
 import { createClient } from '@/lib/supabase-server'
 import { Feed } from '@/components/Feed'
 import { ComposeBox } from '@/components/ComposeBox'
@@ -51,35 +51,18 @@ export default async function HomePage({ searchParams }: HomePageProps) {
 
   return (
     <div>
-      {/* Feed header — Threads style: plain title left, tabs centered */}
-      <div className="sticky top-0 z-30 bg-[#101010]/95 backdrop-blur border-b border-[#1e1e1e]">
-        <div className="flex">
-          <Link
-            href="/"
-            className={`flex-1 py-4 text-center text-[15px] font-semibold relative transition-colors ${
-              !isFollowing
-                ? 'text-[#f1f1f1]'
-                : 'text-[#555] hover:text-[#f1f1f1]'
-            }`}
+      {/* Page header — Threads style: centered title + options menu right */}
+      <div className="sticky top-0 z-30 bg-[#101010]/95 backdrop-blur">
+        <div className="relative flex items-center justify-center px-4 py-4">
+          <h1 className="text-[15px] font-semibold text-[#f1f1f1]">
+            {isFollowing ? 'Following' : 'For you'}
+          </h1>
+          <button
+            aria-label="Options"
+            className="absolute right-4 w-8 h-8 rounded-full flex items-center justify-center text-[#888] hover:text-[#f1f1f1] hover:bg-[#1a1a1a] transition-colors"
           >
-            For you
-            {!isFollowing && (
-              <span className="absolute bottom-0 left-1/2 -translate-x-1/2 w-8 h-[2px] rounded-full bg-white" />
-            )}
-          </Link>
-          <Link
-            href="/?tab=following"
-            className={`flex-1 py-4 text-center text-[15px] font-semibold relative transition-colors ${
-              isFollowing
-                ? 'text-[#f1f1f1]'
-                : 'text-[#555] hover:text-[#f1f1f1]'
-            }`}
-          >
-            Following
-            {isFollowing && (
-              <span className="absolute bottom-0 left-1/2 -translate-x-1/2 w-8 h-[2px] rounded-full bg-white" />
-            )}
-          </Link>
+            <MoreHorizontal className="w-5 h-5" strokeWidth={1.75} />
+          </button>
         </div>
       </div>
 

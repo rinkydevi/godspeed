@@ -1,8 +1,9 @@
 'use client'
 
+import { Fragment } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { Home, Search, Bell, User, PenSquare, Bot, Bookmark, FileText } from 'lucide-react'
+import { Home, Search, Bell, User, PenSquare, Bot, Bookmark } from 'lucide-react'
 import { useEffect } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { cn } from '@/lib/utils'
@@ -24,7 +25,6 @@ export function SidebarNavLinks({ profile, hasUser, userId }: SidebarNavLinksPro
   const pathname = usePathname()
   const queryClient = useQueryClient()
 
-  // Poll unread notification count every 30s
   const { data: countData } = useQuery<{ unread_count: number }>({
     queryKey: ['notifications-count'],
     queryFn: async () => {
@@ -39,7 +39,6 @@ export function SidebarNavLinks({ profile, hasUser, userId }: SidebarNavLinksPro
 
   const unreadCount = countData?.unread_count ?? 0
 
-  // Supabase Realtime: badge updates instantly on new notification
   useEffect(() => {
     if (!userId) return
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -53,19 +52,12 @@ export function SidebarNavLinks({ profile, hasUser, userId }: SidebarNavLinksPro
           .channel('notifications-badge')
           .on(
             'postgres_changes',
-            {
-              event: 'INSERT',
-              schema: 'public',
-              table: 'notifications',
-              filter: `user_id=eq.${userId}`,
-            },
-            () => {
-              queryClient.invalidateQueries({ queryKey: ['notifications-count'] })
-            }
+            { event: 'INSERT', schema: 'public', table: 'notifications', filter: `user_id=eq.${userId}` },
+            () => queryClient.invalidateQueries({ queryKey: ['notifications-count'] })
           )
           .subscribe()
       } catch {
-        // Supabase not configured — polling fallback still active
+        // realtime not configured
       }
     }
 
@@ -76,7 +68,6 @@ export function SidebarNavLinks({ profile, hasUser, userId }: SidebarNavLinksPro
   const isProfileActive = !KNOWN_ROOTS.some(
     (r) => pathname === r || pathname.startsWith(r + '/')
   )
-  const isSettingsActive = pathname.startsWith('/settings')
 
   const navLinks = [
     { href: '/',              label: 'For you',   icon: Home     },
@@ -92,9 +83,8 @@ export function SidebarNavLinks({ profile, hasUser, userId }: SidebarNavLinksPro
         const active = isActive(pathname, href)
         const isBell = href === '/notifications'
         return (
-          <>
+          <Fragment key={href}>
             <Link
-              key={href}
               href={href}
               className={cn(
                 'flex items-center gap-3 px-3 py-2.5 rounded-xl transition-colors',
@@ -117,7 +107,6 @@ export function SidebarNavLinks({ profile, hasUser, userId }: SidebarNavLinksPro
             </Link>
             {idx === 0 && hasUser && (
               <Link
-                key="new-thread"
                 href="/?compose=1"
                 className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-[#888] hover:text-[#f1f1f1] hover:bg-[#1a1a1a] transition-colors"
               >
@@ -125,7 +114,7 @@ export function SidebarNavLinks({ profile, hasUser, userId }: SidebarNavLinksPro
                 <span className="text-[15px] font-medium">New thread</span>
               </Link>
             )}
-          </>
+          </Fragment>
         )
       })}
 
@@ -146,30 +135,29 @@ export function SidebarNavLinks({ profile, hasUser, userId }: SidebarNavLinksPro
         </Link>
       )}
 
-      {/* Feeds section — mirrors Threads "Feeds" subsection */}
+      {/* Feeds section */}
       <div className="mt-3 mb-1 px-3 flex items-center justify-between">
-        <span className="text-[12px] font-semibold text-[#555] uppercase tracking-wider">Feeds</span>
+        <span className="text-[13px] font-normal text-[#777]">Feeds</span>
+        <span className="text-[13px] font-normal text-[#777] hover:text-[#f1f1f1] cursor-pointer transition-colors">Edit</span>
       </div>
       <Link
         href="/?tab=following"
-        className={cn(
-          'flex items-center gap-3 px-3 py-2.5 rounded-xl transition-colors',
-          pathname === '/' && 'text-[#888] hover:text-[#f1f1f1] hover:bg-[#1a1a1a]'
-        )}
+        className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-[#f1f1f1] hover:bg-[#1a1a1a] transition-colors"
       >
-        <span className="w-[22px] h-[22px] flex-shrink-0 flex items-center justify-center">
-          <span className="w-2 h-2 rounded-full border border-[#666]" />
-        </span>
-        <span className="text-[14px] font-medium text-[#888] hover:text-[#f1f1f1] transition-colors">Following</span>
+        <svg className="w-[20px] h-[20px] flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round">
+          <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+          <circle cx="9" cy="7" r="4" />
+          <path d="M22 21v-2a4 4 0 0 0-3-3.87" />
+          <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+        </svg>
+        <span className="text-[15px] font-medium">Following</span>
       </Link>
       <Link
         href="/agents"
-        className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-[#888] hover:text-[#f1f1f1] hover:bg-[#1a1a1a] transition-colors"
+        className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-[#f1f1f1] hover:bg-[#1a1a1a] transition-colors"
       >
-        <span className="w-[22px] h-[22px] flex-shrink-0 flex items-center justify-center">
-          <span className="w-2 h-2 rounded-full border border-[#666]" />
-        </span>
-        <span className="text-[14px] font-medium">Agent posts</span>
+        <Bot className="w-[20px] h-[20px] flex-shrink-0" strokeWidth={1.75} />
+        <span className="text-[15px] font-medium">Agent posts</span>
       </Link>
 
       {!hasUser && (
@@ -181,42 +169,18 @@ export function SidebarNavLinks({ profile, hasUser, userId }: SidebarNavLinksPro
         </Link>
       )}
 
-      {/* More / bottom section */}
-      <div className="mt-auto flex flex-col gap-0.5">
-        {profile && (
-          <Link
-            href="/settings/agents"
-            className={cn(
-              'flex items-center gap-3 px-3 py-2.5 rounded-xl transition-colors',
-              isSettingsActive
-                ? 'text-[#f1f1f1] bg-[#1a1a1a]'
-                : 'text-[#888] hover:text-[#f1f1f1] hover:bg-[#1a1a1a]'
-            )}
-          >
-            <svg
-              className="w-[22px] h-[22px] flex-shrink-0"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth={isSettingsActive ? 2.25 : 1.75}
-              viewBox="0 0 24 24"
-            >
-              <circle cx="12" cy="12" r="3" />
-              <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
-            </svg>
-            <span className={cn('text-[15px]', isSettingsActive ? 'font-semibold text-[#f1f1f1]' : 'font-medium')}>
-              Settings
-            </span>
-          </Link>
-        )}
-        <a
-          href="/llms.txt"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-[#666] hover:text-[#f1f1f1] hover:bg-[#1a1a1a] transition-colors"
+      {/* More at bottom (matches Threads exactly) */}
+      <div className="mt-auto">
+        <Link
+          href={profile ? '/settings/agents' : '/llms.txt'}
+          className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-[#f1f1f1] hover:bg-[#1a1a1a] transition-colors"
         >
-          <FileText className="w-[20px] h-[20px] flex-shrink-0" strokeWidth={1.75} />
-          <span className="text-[13px] font-medium">Agent API</span>
-        </a>
+          <svg className="w-[22px] h-[22px] flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} strokeLinecap="round">
+            <line x1="4" y1="9" x2="20" y2="9" />
+            <line x1="4" y1="15" x2="20" y2="15" />
+          </svg>
+          <span className="text-[15px] font-medium">More</span>
+        </Link>
       </div>
     </nav>
   )
