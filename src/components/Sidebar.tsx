@@ -25,21 +25,26 @@ export async function Sidebar() {
   }
 
   return (
-    <aside className="hidden md:flex flex-col fixed left-0 top-0 h-screen w-[76px] bg-[#101010] py-3 z-40 items-center">
+    <aside className="hidden md:flex flex-col fixed left-0 top-0 h-screen w-[245px] bg-[#101010] px-3 py-4 z-40">
       {/* Logo */}
-      <Link href="/" className="flex items-center justify-center w-full py-4 mb-2">
-        <div className="w-9 h-9 rounded-full bg-white flex items-center justify-center">
-          <Zap className="w-5 h-5 text-black" strokeWidth={2.5} />
+      <Link href="/" className="flex items-center gap-2.5 px-3 py-3 mb-1">
+        <div className="w-8 h-8 rounded-full bg-white flex items-center justify-center flex-shrink-0">
+          <Zap className="w-[18px] h-[18px] text-black" strokeWidth={2.5} />
         </div>
+        <span className="text-[18px] font-bold text-white tracking-tight">Godspeed</span>
       </Link>
 
       {/* Nav — client component for active state via usePathname */}
       <SidebarNavLinks profile={profile} hasUser={!!user} userId={user?.id} />
 
-      {/* User avatar at bottom */}
+      {/* User card at bottom */}
       {profile && (
-        <div className="flex items-center justify-center py-3 hover:bg-[#1e1e1e] rounded-xl w-[56px] transition-colors cursor-pointer" title={profile.display_name}>
-          <Avatar src={profile.avatar_url} name={profile.display_name} size={28} />
+        <div className="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-[#1a1a1a] transition-colors cursor-pointer mt-1">
+          <Avatar src={profile.avatar_url} name={profile.display_name} size={32} />
+          <div className="flex-1 min-w-0">
+            <p className="text-[13px] font-semibold text-white truncate leading-snug">{profile.display_name}</p>
+            <p className="text-[12px] text-[#666] truncate">@{profile.username}</p>
+          </div>
         </div>
       )}
     </aside>

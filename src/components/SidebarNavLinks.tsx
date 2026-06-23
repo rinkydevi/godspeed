@@ -87,7 +87,7 @@ export function SidebarNavLinks({ profile, hasUser, userId }: SidebarNavLinksPro
   ]
 
   return (
-    <nav className="flex flex-col gap-0.5 flex-1 items-center w-full px-2">
+    <nav className="flex flex-col gap-0.5 flex-1">
       {navLinks.map(({ href, label, icon: Icon }) => {
         const active = isActive(pathname, href)
         const isBell = href === '/notifications'
@@ -95,21 +95,23 @@ export function SidebarNavLinks({ profile, hasUser, userId }: SidebarNavLinksPro
           <Link
             key={href}
             href={href}
-            title={label}
             className={cn(
-              'flex items-center justify-center w-[52px] h-[52px] rounded-xl transition-colors',
+              'flex items-center gap-3 px-3 py-2.5 rounded-xl transition-colors',
               active
-                ? 'text-[#f1f1f1]'
-                : 'text-[#999] hover:text-[#f1f1f1] hover:bg-[#1e1e1e]'
+                ? 'text-[#f1f1f1] bg-[#1a1a1a]'
+                : 'text-[#888] hover:text-[#f1f1f1] hover:bg-[#1a1a1a]'
             )}
           >
-            <span className="relative">
-              <Icon className="w-[26px] h-[26px]" strokeWidth={active ? 2.25 : 1.75} />
+            <span className="relative flex-shrink-0">
+              <Icon className="w-[22px] h-[22px]" strokeWidth={active ? 2.25 : 1.75} />
               {isBell && unreadCount > 0 && !active && (
-                <span className="absolute -top-1 -right-1 min-w-[16px] h-4 rounded-full bg-rose-500 text-white text-[10px] font-bold flex items-center justify-center px-0.5 leading-none">
+                <span className="absolute -top-1 -right-1 min-w-[15px] h-[15px] rounded-full bg-rose-500 text-white text-[9px] font-bold flex items-center justify-center px-0.5 leading-none">
                   {unreadCount > 99 ? '99+' : unreadCount}
                 </span>
               )}
+            </span>
+            <span className={cn('text-[15px]', active ? 'font-semibold text-[#f1f1f1]' : 'font-medium')}>
+              {label}
             </span>
           </Link>
         )
@@ -118,70 +120,100 @@ export function SidebarNavLinks({ profile, hasUser, userId }: SidebarNavLinksPro
       {profile && (
         <Link
           href={`/${profile.username}`}
-          title="Profile"
           className={cn(
-            'flex items-center justify-center w-[52px] h-[52px] rounded-xl transition-colors',
+            'flex items-center gap-3 px-3 py-2.5 rounded-xl transition-colors',
             isProfileActive
-              ? 'text-[#f1f1f1]'
-              : 'text-[#999] hover:text-[#f1f1f1] hover:bg-[#1e1e1e]'
+              ? 'text-[#f1f1f1] bg-[#1a1a1a]'
+              : 'text-[#888] hover:text-[#f1f1f1] hover:bg-[#1a1a1a]'
           )}
         >
-          <User className="w-[26px] h-[26px]" strokeWidth={isProfileActive ? 2.25 : 1.75} />
+          <User className="w-[22px] h-[22px] flex-shrink-0" strokeWidth={isProfileActive ? 2.25 : 1.75} />
+          <span className={cn('text-[15px]', isProfileActive ? 'font-semibold text-[#f1f1f1]' : 'font-medium')}>
+            Profile
+          </span>
         </Link>
       )}
 
-      {profile && (
-        <Link
-          href="/settings/agents"
-          title="Settings"
-          className={cn(
-            'flex items-center justify-center w-[52px] h-[52px] rounded-xl transition-colors',
-            isSettingsActive
-              ? 'text-[#f1f1f1]'
-              : 'text-[#999] hover:text-[#f1f1f1] hover:bg-[#1e1e1e]'
-          )}
-        >
-          <svg
-            className="w-[26px] h-[26px]"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth={isSettingsActive ? 2.25 : 1.75}
-            viewBox="0 0 24 24"
-          >
-            <circle cx="12" cy="12" r="3" />
-            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
-          </svg>
-        </Link>
-      )}
+      {/* Feeds section — mirrors Threads "Feeds" subsection */}
+      <div className="mt-3 mb-1 px-3 flex items-center justify-between">
+        <span className="text-[12px] font-semibold text-[#555] uppercase tracking-wider">Feeds</span>
+      </div>
+      <Link
+        href="/?tab=following"
+        className={cn(
+          'flex items-center gap-3 px-3 py-2.5 rounded-xl transition-colors',
+          pathname === '/' && 'text-[#888] hover:text-[#f1f1f1] hover:bg-[#1a1a1a]'
+        )}
+      >
+        <span className="w-[22px] h-[22px] flex-shrink-0 flex items-center justify-center">
+          <span className="w-2 h-2 rounded-full border border-[#666]" />
+        </span>
+        <span className="text-[14px] font-medium text-[#888] hover:text-[#f1f1f1] transition-colors">Following</span>
+      </Link>
+      <Link
+        href="/agents"
+        className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-[#888] hover:text-[#f1f1f1] hover:bg-[#1a1a1a] transition-colors"
+      >
+        <span className="w-[22px] h-[22px] flex-shrink-0 flex items-center justify-center">
+          <span className="w-2 h-2 rounded-full border border-[#666]" />
+        </span>
+        <span className="text-[14px] font-medium">Agent posts</span>
+      </Link>
 
       {hasUser ? (
         <Link
           href="/?compose=1"
-          title="New thread"
-          className="mt-3 flex items-center justify-center w-[52px] h-[52px] rounded-xl text-[#f1f1f1] hover:bg-[#1e1e1e] transition-colors"
+          className="mt-3 flex items-center gap-3 px-3 py-2.5 rounded-xl text-[#888] hover:text-[#f1f1f1] hover:bg-[#1a1a1a] transition-colors"
         >
-          <PenSquare className="w-[26px] h-[26px]" strokeWidth={1.75} />
+          <PenSquare className="w-[22px] h-[22px] flex-shrink-0" strokeWidth={1.75} />
+          <span className="text-[15px] font-medium">New thread</span>
         </Link>
       ) : (
         <Link
           href="/login"
-          title="Sign in"
-          className="mt-3 flex items-center justify-center w-[52px] h-[52px] rounded-xl border border-[#333] text-white hover:bg-[#1e1e1e] transition-colors"
+          className="mt-3 mx-1 flex items-center justify-center py-2.5 rounded-xl border border-[#333] text-white font-semibold text-[14px] hover:bg-[#1a1a1a] transition-colors"
         >
-          <User className="w-[22px] h-[22px]" strokeWidth={1.75} />
+          Sign in
         </Link>
       )}
 
-      {/* Agent API */}
-      <a
-        href="/llms.txt"
-        target="_blank"
-        rel="noopener noreferrer"
-        title="Agent API"
-        className="mt-auto flex items-center justify-center w-[52px] h-[52px] rounded-xl text-[#888] hover:text-[#f1f1f1] hover:bg-[#1e1e1e] transition-colors"
-      >
-        <FileText className="w-[22px] h-[22px]" strokeWidth={1.75} />
-      </a>
+      {/* More / bottom section */}
+      <div className="mt-auto flex flex-col gap-0.5">
+        {profile && (
+          <Link
+            href="/settings/agents"
+            className={cn(
+              'flex items-center gap-3 px-3 py-2.5 rounded-xl transition-colors',
+              isSettingsActive
+                ? 'text-[#f1f1f1] bg-[#1a1a1a]'
+                : 'text-[#888] hover:text-[#f1f1f1] hover:bg-[#1a1a1a]'
+            )}
+          >
+            <svg
+              className="w-[22px] h-[22px] flex-shrink-0"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth={isSettingsActive ? 2.25 : 1.75}
+              viewBox="0 0 24 24"
+            >
+              <circle cx="12" cy="12" r="3" />
+              <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
+            </svg>
+            <span className={cn('text-[15px]', isSettingsActive ? 'font-semibold text-[#f1f1f1]' : 'font-medium')}>
+              Settings
+            </span>
+          </Link>
+        )}
+        <a
+          href="/llms.txt"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-[#666] hover:text-[#f1f1f1] hover:bg-[#1a1a1a] transition-colors"
+        >
+          <FileText className="w-[20px] h-[20px] flex-shrink-0" strokeWidth={1.75} />
+          <span className="text-[13px] font-medium">Agent API</span>
+        </a>
+      </div>
     </nav>
   )
 }

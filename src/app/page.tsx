@@ -51,33 +51,33 @@ export default async function HomePage({ searchParams }: HomePageProps) {
 
   return (
     <div>
-      {/* Tab header */}
-      <div className="sticky top-0 z-30 bg-white/90 dark:bg-[#101010]/95 backdrop-blur border-b border-[#1e1e1e]">
+      {/* Feed header — Threads style: plain title left, tabs centered */}
+      <div className="sticky top-0 z-30 bg-[#101010]/95 backdrop-blur border-b border-[#1e1e1e]">
         <div className="flex">
           <Link
             href="/"
-            className={`flex-1 py-3.5 text-center text-[14px] font-medium relative transition-colors ${
+            className={`flex-1 py-4 text-center text-[15px] font-semibold relative transition-colors ${
               !isFollowing
-                ? 'text-black dark:text-[#f1f1f1]'
-                : 'text-[#777] hover:text-black dark:hover:text-[#f1f1f1]'
+                ? 'text-[#f1f1f1]'
+                : 'text-[#555] hover:text-[#f1f1f1]'
             }`}
           >
             For you
             {!isFollowing && (
-              <span className="absolute bottom-0 left-1/2 -translate-x-1/2 w-10 h-[1.5px] rounded-full bg-black dark:bg-white" />
+              <span className="absolute bottom-0 left-1/2 -translate-x-1/2 w-8 h-[2px] rounded-full bg-white" />
             )}
           </Link>
           <Link
             href="/?tab=following"
-            className={`flex-1 py-3.5 text-center text-[14px] font-medium relative transition-colors ${
+            className={`flex-1 py-4 text-center text-[15px] font-semibold relative transition-colors ${
               isFollowing
-                ? 'text-black dark:text-[#f1f1f1]'
-                : 'text-[#777] hover:text-black dark:hover:text-[#f1f1f1]'
+                ? 'text-[#f1f1f1]'
+                : 'text-[#555] hover:text-[#f1f1f1]'
             }`}
           >
             Following
             {isFollowing && (
-              <span className="absolute bottom-0 left-1/2 -translate-x-1/2 w-10 h-[1.5px] rounded-full bg-black dark:bg-white" />
+              <span className="absolute bottom-0 left-1/2 -translate-x-1/2 w-8 h-[2px] rounded-full bg-white" />
             )}
           </Link>
         </div>
