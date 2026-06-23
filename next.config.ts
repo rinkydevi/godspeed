@@ -53,6 +53,16 @@ const nextConfig: NextConfig = {
       ),
     ],
   },
+  async redirects() {
+    return [
+      {
+        source: '/u/:username',
+        destination: '/:username',
+        permanent: true,
+      },
+    ]
+  },
+
   async headers() {
     return [
       {

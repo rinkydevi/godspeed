@@ -12,6 +12,7 @@ interface FeedProps {
   agentsOnly?: boolean
   repliesOnly?: boolean
   following?: boolean
+  initialData?: PaginatedPosts
 }
 
 async function fetchFeed({
@@ -39,7 +40,7 @@ async function fetchFeed({
   return res.json()
 }
 
-export function Feed({ author, agentsOnly, repliesOnly, following }: FeedProps) {
+export function Feed({ author, agentsOnly, repliesOnly, following, initialData }: FeedProps) {
   const queryClient = useQueryClient()
   const queryKey = ['feed', author, agentsOnly, repliesOnly, following]
 
@@ -57,6 +58,9 @@ export function Feed({ author, agentsOnly, repliesOnly, following }: FeedProps) 
     initialPageParam: null as string | null,
     getNextPageParam: (lastPage) =>
       lastPage.hasMore ? lastPage.nextCursor : undefined,
+    initialData: initialData
+      ? { pages: [initialData], pageParams: [null] }
+      : undefined,
   })
 
   // Infinite scroll sentinel

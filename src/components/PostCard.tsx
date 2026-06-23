@@ -86,20 +86,21 @@ export function PostCard({ post, showThreadLine = false, isReply = false }: Post
   })
 
   function linkifyContent(raw: string) {
+    // Escape HTML special chars — apostrophes are safe in text content and
+    // must NOT be encoded here because &#39; confuses the hashtag regex (#39).
     const escaped = raw
       .replace(/&/g, '&amp;')
       .replace(/</g, '&lt;')
       .replace(/>/g, '&gt;')
       .replace(/"/g, '&quot;')
-      .replace(/'/g, '&#39;')
     return escaped
       .replace(
         /#(\w+)/g,
-        '<a href="/search?q=%23$1" class="text-violet-600 dark:text-violet-400 hover:underline">#$1</a>'
+        '<a href="/search?q=%23$1" class="text-violet-600 dark:text-violet-400 underline underline-offset-2 decoration-violet-400/40 hover:decoration-violet-400">#$1</a>'
       )
       .replace(
         /@(\w+)/g,
-        '<a href="/$1" class="text-violet-600 dark:text-violet-400 hover:underline">@$1</a>'
+        '<a href="/$1" class="text-violet-600 dark:text-violet-400 underline underline-offset-2 decoration-violet-400/40 hover:decoration-violet-400">@$1</a>'
       )
   }
 
@@ -135,10 +136,10 @@ export function PostCard({ post, showThreadLine = false, isReply = false }: Post
           </Link>
           {post.author.is_agent && <AgentBadge />}
           <span className="ml-auto flex items-center gap-2">
-            <span className="text-[13px] text-[#777]">
+            <span className="text-[13px] text-[#999]">
               {formatDate(post.created_at)}
             </span>
-            <button className="text-[#777] hover:text-[#aaa] p-0.5 -mr-1 rounded transition-colors">
+            <button aria-label="More options" className="text-[#777] hover:text-[#aaa] p-2 -mr-1.5 rounded transition-colors">
               <MoreHorizontal className="w-4 h-4" />
             </button>
           </span>
@@ -147,7 +148,7 @@ export function PostCard({ post, showThreadLine = false, isReply = false }: Post
         {/* Username */}
         <Link
           href={`/${post.author.username}`}
-          className="text-[13px] text-[#777] -mt-0.5 block"
+          className="text-[13px] text-[#999] -mt-0.5 block"
         >
           @{post.author.username}
         </Link>
@@ -178,10 +179,11 @@ export function PostCard({ post, showThreadLine = false, isReply = false }: Post
         )}
 
         {/* Action bar */}
-        <div className="flex items-center gap-1 mt-2.5 -ml-1.5 text-[#777]">
+        <div className="flex items-center gap-1 mt-2.5 -ml-1.5 text-[#999]">
           {/* Like */}
           <button
             onClick={() => likeMutation.mutate()}
+            aria-label={`${isLiked ? 'Unlike' : 'Like'}${likeCount > 0 ? `, ${likeCount}` : ''}`}
             className={cn(
               'flex items-center gap-1.5 px-1.5 py-1 rounded-full text-[13px] transition-colors',
               isLiked
@@ -203,6 +205,7 @@ export function PostCard({ post, showThreadLine = false, isReply = false }: Post
           {/* Reply */}
           <Link
             href={`/${post.author.username}/${post.id}`}
+            aria-label={`Reply${post.reply_count > 0 ? `, ${post.reply_count}` : ''}`}
             className="flex items-center gap-1.5 px-1.5 py-1 rounded-full text-[13px] hover:text-[#f1f1f1] transition-colors"
           >
             <MessageCircle className="w-[18px] h-[18px]" strokeWidth={1.75} />
@@ -213,6 +216,7 @@ export function PostCard({ post, showThreadLine = false, isReply = false }: Post
           <button
             onClick={() => repostMutation.mutate()}
             disabled={repostMutation.isPending}
+            aria-label={isReposted ? 'Undo repost' : 'Repost'}
             className={cn(
               'flex items-center gap-1.5 px-1.5 py-1 rounded-full text-[13px] transition-colors',
               isReposted ? 'text-green-500' : 'hover:text-green-500'
@@ -223,7 +227,7 @@ export function PostCard({ post, showThreadLine = false, isReply = false }: Post
           </button>
 
           {/* Share */}
-          <button className="flex items-center gap-1.5 px-1.5 py-1 rounded-full text-[13px] hover:text-[#f1f1f1] transition-colors">
+          <button aria-label="Share" className="flex items-center gap-1.5 px-1.5 py-1 rounded-full text-[13px] hover:text-[#f1f1f1] transition-colors">
             <Share2 className="w-[17px] h-[17px]" strokeWidth={1.75} />
           </button>
 
@@ -231,6 +235,7 @@ export function PostCard({ post, showThreadLine = false, isReply = false }: Post
           <button
             onClick={() => bookmarkMutation.mutate()}
             disabled={bookmarkMutation.isPending}
+            aria-label={isBookmarked ? 'Remove bookmark' : 'Bookmark'}
             className={cn(
               'flex items-center gap-1.5 px-1.5 py-1 rounded-full text-[13px] transition-colors ml-auto',
               isBookmarked ? 'text-violet-500' : 'hover:text-violet-500'

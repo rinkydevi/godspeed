@@ -99,7 +99,7 @@ export function SidebarNavLinks({ profile, hasUser, userId }: SidebarNavLinksPro
               'flex items-center gap-4 px-3 py-3 rounded-xl transition-colors',
               active
                 ? 'text-[#f1f1f1]'
-                : 'text-[#777] hover:text-[#f1f1f1] hover:bg-[#1e1e1e]'
+                : 'text-[#999] hover:text-[#f1f1f1] hover:bg-[#1e1e1e]'
             )}
           >
             <span className="relative">
@@ -124,7 +124,7 @@ export function SidebarNavLinks({ profile, hasUser, userId }: SidebarNavLinksPro
             'flex items-center gap-4 px-3 py-3 rounded-xl transition-colors',
             isProfileActive
               ? 'text-[#f1f1f1]'
-              : 'text-[#777] hover:text-[#f1f1f1] hover:bg-[#1e1e1e]'
+              : 'text-[#999] hover:text-[#f1f1f1] hover:bg-[#1e1e1e]'
           )}
         >
           <User className="w-6 h-6" strokeWidth={isProfileActive ? 2.25 : 1.75} />
@@ -141,7 +141,7 @@ export function SidebarNavLinks({ profile, hasUser, userId }: SidebarNavLinksPro
             'flex items-center gap-4 px-3 py-3 rounded-xl transition-colors',
             isSettingsActive
               ? 'text-[#f1f1f1]'
-              : 'text-[#777] hover:text-[#f1f1f1] hover:bg-[#1e1e1e]'
+              : 'text-[#999] hover:text-[#f1f1f1] hover:bg-[#1e1e1e]'
           )}
         >
           <svg
@@ -182,7 +182,7 @@ export function SidebarNavLinks({ profile, hasUser, userId }: SidebarNavLinksPro
         href="/llms.txt"
         target="_blank"
         rel="noopener noreferrer"
-        className="mt-auto flex items-center gap-4 px-3 py-3 rounded-xl text-[#555] hover:text-[#f1f1f1] hover:bg-[#1e1e1e] transition-colors"
+        className="mt-auto flex items-center gap-4 px-3 py-3 rounded-xl text-[#888] hover:text-[#f1f1f1] hover:bg-[#1e1e1e] transition-colors"
       >
         <FileText className="w-5 h-5" strokeWidth={1.75} />
         <span className="text-[13px] font-medium">Agent API</span>

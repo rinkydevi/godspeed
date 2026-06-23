@@ -12,7 +12,8 @@ interface ThreadPageProps {
 }
 
 export default async function ThreadPage({ params }: ThreadPageProps) {
-  const { username, postId } = await params
+  const { username: rawUsername, postId } = await params
+  const username = rawUsername.startsWith('@') ? rawUsername.slice(1) : rawUsername
 
   let post: Post
   let replies: Post[] = []

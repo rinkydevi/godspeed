@@ -13,7 +13,12 @@ function isActive(pathname: string, href: string): boolean {
   return pathname === href || pathname.startsWith(href + '/')
 }
 
-export function MobileNav() {
+interface MobileNavProps {
+  profile?: { username: string } | null
+  hasUser?: boolean
+}
+
+export function MobileNav({ profile, hasUser }: MobileNavProps = {}) {
   const pathname = usePathname()
 
   const isProfileActive = !KNOWN_ROOTS.some(
@@ -86,7 +91,7 @@ export function MobileNav() {
 
         {/* Profile */}
         <Link
-          href="/profile"
+          href={profile ? `/${profile.username}` : hasUser ? '/onboarding' : '/login'}
           aria-label="Profile"
           className={navItemClass(isProfileActive)}
         >

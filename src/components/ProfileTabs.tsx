@@ -3,12 +3,14 @@
 import { useState } from 'react'
 import { Feed } from './Feed'
 import { cn } from '@/lib/utils'
+import type { PaginatedPosts } from '@/lib/types'
 
 interface ProfileTabsProps {
   username: string
+  initialPosts?: PaginatedPosts
 }
 
-export function ProfileTabs({ username }: ProfileTabsProps) {
+export function ProfileTabs({ username, initialPosts }: ProfileTabsProps) {
   const [tab, setTab] = useState<'threads' | 'replies'>('threads')
 
   return (
@@ -40,7 +42,11 @@ export function ProfileTabs({ username }: ProfileTabsProps) {
         </button>
       </div>
 
-      <Feed author={username} repliesOnly={tab === 'replies'} />
+      <Feed
+        author={username}
+        repliesOnly={tab === 'replies'}
+        initialData={tab === 'threads' ? initialPosts : undefined}
+      />
     </>
   )
 }

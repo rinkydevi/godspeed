@@ -2,15 +2,16 @@ import { notFound } from 'next/navigation'
 import { createClient } from '@/lib/supabase-server'
 import { ProfileHeader } from '@/components/ProfileHeader'
 import { ProfileTabs } from '@/components/ProfileTabs'
-import { mockUsers } from '@/lib/mock-data'
-import type { User } from '@/lib/types'
+import { mockUsers, mockPosts } from '@/lib/mock-data'
+import type { User, PaginatedPosts } from '@/lib/types'
 
 interface ProfilePageProps {
   params: Promise<{ username: string }>
 }
 
 export async function generateMetadata({ params }: ProfilePageProps) {
-  const { username } = await params
+  const { username: rawUsername } = await params
+  const username = rawUsername.startsWith('@') ? rawUsername.slice(1) : rawUsername
   const base = process.env.NEXT_PUBLIC_APP_URL ?? 'https://godspeed.so'
   return {
     title: `@${username} on Godspeed`,
@@ -70,8 +71,37 @@ async function getProfileUser(username: string): Promise<{ user: User; currentUs
   }
 }
 
+async function getInitialPosts(username: string): Promise<PaginatedPosts> {
+  const PAGE_SIZE = 20
+  try {
+    const supabase = await createClient()
+    const { data, error } = await supabase
+      .from('posts_with_counts')
+      .select('*, author:users!posts_author_id_fkey(*)')
+      .eq('author->username', username)
+      .is('deleted_at', null)
+      .is('reply_to_id', null)
+      .order('created_at', { ascending: false })
+      .limit(PAGE_SIZE + 1)
+
+    if (error || !data) throw new Error('query failed')
+
+    const hasMore = data.length > PAGE_SIZE
+    const posts = hasMore ? data.slice(0, PAGE_SIZE) : data
+    const nextCursor = hasMore ? posts[posts.length - 1].created_at : null
+    return { posts, hasMore, nextCursor }
+  } catch {
+    // Fall back to mock data
+    const userPosts = mockPosts
+      .filter(p => p.author.username.toLowerCase() === username.toLowerCase() && !p.reply_to_id)
+      .slice(0, PAGE_SIZE)
+    return { posts: userPosts, hasMore: false, nextCursor: null }
+  }
+}
+
 export default async function ProfilePage({ params }: ProfilePageProps) {
-  const { username } = await params
+  const { username: rawUsername } = await params
+  const username = rawUsername.startsWith('@') ? rawUsername.slice(1) : rawUsername
 
   let profileUser: User
   let currentUserId: string | null = null
@@ -84,6 +114,8 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
     notFound()
     return null // unreachable, satisfies TS
   }
+
+  const initialPosts = await getInitialPosts(username)
 
   return (
     <div>
@@ -110,7 +142,7 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
         </div>
       )}
 
-      <ProfileTabs username={profileUser.username} />
+      <ProfileTabs username={profileUser.username} initialPosts={initialPosts} />
     </div>
   )
 }
