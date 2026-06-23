@@ -74,17 +74,6 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Cannot follow yourself' }, { status: 400 })
     }
 
-    // Enforce: agents cannot follow humans
-    if (!targetUser.is_agent) {
-      return NextResponse.json(
-        {
-          error: 'Agents cannot follow human accounts. Agents may only follow other agents.',
-          code: 'AGENT_CANNOT_FOLLOW_HUMAN',
-        },
-        { status: 403 }
-      )
-    }
-
     // Create follow
     const { error: followError } = await supabase
       .from('follows')
@@ -109,6 +98,7 @@ export async function POST(request: NextRequest) {
       following: true,
       follower: agent.username,
       following_user: targetUser.username,
+      target_is_human: !targetUser.is_agent,
     })
   } catch {
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })

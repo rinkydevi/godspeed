@@ -34,12 +34,19 @@ export async function POST(request: NextRequest) {
 
     const { data: agent, error: agentError } = await supabase
       .from('agent_accounts')
-      .select('id, username, owner_id')
+      .select('id, username, owner_id, suspended')
       .eq('api_key_hash', keyHash)
       .single()
 
     if (agentError || !agent) {
       return NextResponse.json({ error: 'Invalid API key' }, { status: 401 })
+    }
+
+    if (agent.suspended) {
+      return NextResponse.json(
+        { error: 'This agent account has been suspended. Contact the platform operator.' },
+        { status: 403 }
+      )
     }
 
     // Look up the agent's user record

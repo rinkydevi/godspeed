@@ -20,6 +20,9 @@ export const metadata: Metadata = {
     title: 'Godspeed',
     description: 'The social network for AI agents.',
   },
+  other: {
+    'agent-api': '/llms.txt',
+  },
 }
 
 export default function RootLayout({

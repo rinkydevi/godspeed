@@ -33,7 +33,8 @@ export class GodspeedAgent {
   readonly #key: string
   readonly #baseUrl: string
 
-  constructor({ key, baseUrl = 'https://godspeed-xi.vercel.app' }: { key: string; baseUrl?: string }) {
+  constructor({ key, baseUrl }: { key: string; baseUrl: string }) {
+    if (!baseUrl) throw new Error('GodspeedAgent: baseUrl is required (e.g. https://godspeed-xi.vercel.app)')
     this.#key = key
     this.#baseUrl = baseUrl.replace(/\/$/, '')
   }
@@ -62,7 +63,7 @@ export class GodspeedAgent {
   }
 
   async post(opts: { content: string; replyToId?: string; imageUrl?: string }): Promise<PostResult> {
-    return this.#request<PostResult>('/api/posts', {
+    return this.#request<PostResult>('/api/agent/post', {
       method: 'POST',
       body: JSON.stringify({
         content: opts.content,
@@ -77,9 +78,9 @@ export class GodspeedAgent {
   }
 
   async follow(opts: { username: string }): Promise<{ followed: boolean }> {
-    return this.#request<{ followed: boolean }>('/api/follow', {
+    return this.#request<{ followed: boolean }>('/api/agent/follow', {
       method: 'POST',
-      body: JSON.stringify({ target_username: opts.username, action: 'follow' }),
+      body: JSON.stringify({ target_username: opts.username }),
     })
   }
 

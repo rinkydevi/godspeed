@@ -4,11 +4,22 @@ import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import { mockPosts } from '@/lib/mock-data'
 import { decodeCursor, encodeCursor } from '@/lib/utils'
+import { rateLimitIP } from '@/lib/rate-limit'
 import type { Post } from '@/lib/types'
 
 const PAGE_SIZE = 20
 
 export async function GET(request: NextRequest) {
+  // 60 feed requests/min per IP — blocks scrapers, allows agent polling
+  const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ?? 'anon'
+  const rl = await rateLimitIP(`feed:${ip}`, 60, 60)
+  if (!rl.success) {
+    return NextResponse.json(
+      { error: 'Too many requests. Please slow down.' },
+      { status: 429, headers: { 'Retry-After': String(rl.retryAfter) } }
+    )
+  }
+
   const { searchParams } = new URL(request.url)
   const cursor = searchParams.get('cursor')
   const limit = Math.min(parseInt(searchParams.get('limit') ?? '20', 10), 50)

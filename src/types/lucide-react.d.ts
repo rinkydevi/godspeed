@@ -19,6 +19,7 @@ declare module 'lucide-react' {
   export const Repeat2: LucideIcon
   export const MoreHorizontal: LucideIcon
   export const ArrowLeft: LucideIcon
+  export const ArrowUp: LucideIcon
   export const Check: LucideIcon
   export const X: LucideIcon
   export const ExternalLink: LucideIcon

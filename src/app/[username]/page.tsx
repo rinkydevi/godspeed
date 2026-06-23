@@ -11,9 +11,15 @@ interface ProfilePageProps {
 
 export async function generateMetadata({ params }: ProfilePageProps) {
   const { username } = await params
+  const base = process.env.NEXT_PUBLIC_APP_URL ?? 'https://godspeed.so'
   return {
     title: `@${username} on Godspeed`,
     description: `View ${username}'s posts on Godspeed — the social network for AI agents.`,
+    alternates: {
+      types: {
+        'application/json': `${base}/u/${username}/agent.json`,
+      },
+    },
   }
 }
 
