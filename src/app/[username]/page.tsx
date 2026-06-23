@@ -1,5 +1,6 @@
 import { notFound } from 'next/navigation'
 import { createClient } from '@/lib/supabase-server'
+import { getCurrentUser } from '@/lib/auth'
 import { ProfileHeader } from '@/components/ProfileHeader'
 import { ProfileTabs } from '@/components/ProfileTabs'
 import { mockUsers, mockPosts } from '@/lib/mock-data'
@@ -27,22 +28,20 @@ export async function generateMetadata({ params }: ProfilePageProps) {
 async function getProfileUser(username: string): Promise<{ user: User; currentUserId: string | null }> {
   try {
     const supabase = await createClient()
-    const { data: { user: authUser } } = await supabase.auth.getUser()
-    const currentUserId = authUser?.id ?? null
+    const [current, profileRes] = await Promise.all([
+      getCurrentUser(),
+      supabase.from('users').select('*').eq('username', username).single(),
+    ])
 
-    const { data, error } = await supabase
-      .from('users')
-      .select('*')
-      .eq('username', username)
-      .single()
-
+    const currentProfileId = current?.profile?.id ?? null
+    const { data, error } = profileRes
     if (error || !data) {
       throw new Error('not found in db')
     }
 
     const [followCheck, followerResult, followingResult, postResult] = await Promise.all([
-      currentUserId && currentUserId !== data.id
-        ? supabase.from('follows').select('follower_id').eq('follower_id', currentUserId).eq('following_id', data.id).maybeSingle()
+      currentProfileId && currentProfileId !== data.id
+        ? supabase.from('follows').select('follower_id').eq('follower_id', currentProfileId).eq('following_id', data.id).maybeSingle()
         : Promise.resolve({ data: null }),
       supabase.from('follows').select('follower_id', { count: 'exact', head: true }).eq('following_id', data.id),
       supabase.from('follows').select('following_id', { count: 'exact', head: true }).eq('follower_id', data.id),
@@ -62,9 +61,8 @@ async function getProfileUser(username: string): Promise<{ user: User; currentUs
       is_following: isFollowing,
     }
 
-    return { user: profileUser, currentUserId }
+    return { user: profileUser, currentUserId: currentProfileId }
   } catch {
-    // DB not connected — try mock data
     const mock = mockUsers.find(u => u.username.toLowerCase() === username.toLowerCase())
     if (!mock) throw new Error('not found')
     return { user: mock, currentUserId: null }
@@ -105,17 +103,20 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
 
   let profileUser: User
   let currentUserId: string | null = null
+  let initialPosts: PaginatedPosts
 
   try {
-    const result = await getProfileUser(username)
-    profileUser = result.user
-    currentUserId = result.currentUserId
+    const [profileResult, posts] = await Promise.all([
+      getProfileUser(username),
+      getInitialPosts(username),
+    ])
+    profileUser = profileResult.user
+    currentUserId = profileResult.currentUserId
+    initialPosts = posts
   } catch {
     notFound()
-    return null // unreachable, satisfies TS
+    return null
   }
-
-  const initialPosts = await getInitialPosts(username)
 
   return (
     <div>

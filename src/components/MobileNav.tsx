@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { Home, Search, PenSquare, Bell, User } from 'lucide-react'
+import { Home, Search, PenSquare, Heart, User } from 'lucide-react'
 import { useQuery } from '@tanstack/react-query'
 import { cn } from '@/lib/utils'
 
@@ -34,69 +34,63 @@ export function MobileNav({ profile, hasUser }: MobileNavProps = {}) {
     },
     refetchInterval: 30_000,
     staleTime: 20_000,
+    enabled: !!hasUser,
   })
 
   const unreadCount = countData?.unread_count ?? 0
 
-  const links = [
-    { href: '/',             icon: Home,   label: 'Home',    active: isActive(pathname, '/') },
-    { href: '/search',       icon: Search, label: 'Search',  active: isActive(pathname, '/search') },
-  ]
-
-  const navItemClass = (active: boolean) => cn(
-    'flex flex-col items-center justify-center gap-0.5 w-14 h-full transition-colors',
-    active ? 'text-[#f1f1f1]' : 'text-[#555]'
-  )
+  const iconBase = 'flex items-center justify-center flex-1 h-full transition-opacity active:opacity-60'
+  const iconColor = (active: boolean) => active ? 'text-[#f1f1f1]' : 'text-[#5e5e5e]'
 
   return (
-    <nav className="md:hidden fixed bottom-0 left-0 right-0 border-t border-[#1e1e1e] bg-[#101010] z-50">
-      <div className="flex items-stretch justify-around h-[58px]">
+    <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-black border-t border-[#1e1e1e] z-50 pb-[env(safe-area-inset-bottom)]">
+      <div className="flex items-stretch h-[60px]">
 
-        {links.map(({ href, icon: Icon, label, active }) => (
-          <Link key={href} href={href} aria-label={label} className={navItemClass(active)}>
-            <Icon className="w-5 h-5" strokeWidth={active ? 2.25 : 1.75} />
-            <span className="text-[10px] leading-none">{label}</span>
-          </Link>
-        ))}
-
-        {/* Compose */}
-        <Link
-          href="/?compose=1"
-          aria-label="New thread"
-          className={navItemClass(false)}
-        >
-          <PenSquare className="w-5 h-5" strokeWidth={1.75} />
-          <span className="text-[10px] leading-none">New</span>
+        <Link href="/" aria-label="Home" prefetch className={cn(iconBase, iconColor(isActive(pathname, '/')))}>
+          <Home className="w-[26px] h-[26px]" strokeWidth={isActive(pathname, '/') ? 2.5 : 1.75} fill={isActive(pathname, '/') ? 'currentColor' : 'none'} />
         </Link>
 
-        {/* Activity / Bell */}
+        <Link href="/search" aria-label="Search" prefetch className={cn(iconBase, iconColor(isActive(pathname, '/search')))}>
+          <Search className="w-[26px] h-[26px]" strokeWidth={isActive(pathname, '/search') ? 2.5 : 1.75} />
+        </Link>
+
+        <Link href="/?compose=1" aria-label="New thread" className={cn(iconBase, 'text-[#f1f1f1]')}>
+          <div className="w-[44px] h-[34px] rounded-xl bg-[#1e1e1e] flex items-center justify-center">
+            <PenSquare className="w-[20px] h-[20px]" strokeWidth={1.85} />
+          </div>
+        </Link>
+
         <Link
           href="/notifications"
           aria-label="Activity"
-          className={navItemClass(isActive(pathname, '/notifications'))}
+          prefetch
+          className={cn(iconBase, iconColor(isActive(pathname, '/notifications')))}
         >
           <div className="relative">
-            <Bell
-              className="w-5 h-5"
-              strokeWidth={isActive(pathname, '/notifications') ? 2.25 : 1.75}
+            <Heart
+              className="w-[26px] h-[26px]"
+              strokeWidth={isActive(pathname, '/notifications') ? 2.5 : 1.75}
+              fill={isActive(pathname, '/notifications') ? 'currentColor' : 'none'}
             />
             {unreadCount > 0 && !isActive(pathname, '/notifications') && (
-              <span className="absolute -top-1 -right-1.5 min-w-[14px] h-3.5 rounded-full bg-rose-500 text-white text-[9px] font-bold flex items-center justify-center px-0.5 leading-none">
+              <span className="absolute -top-1 -right-2 min-w-[16px] h-[16px] rounded-full bg-rose-500 text-white text-[10px] font-bold flex items-center justify-center px-1 leading-none border-2 border-black">
                 {unreadCount > 99 ? '99+' : unreadCount}
               </span>
             )}
           </div>
-          <span className="text-[10px] leading-none">Activity</span>
         </Link>
 
-        {/* Profile */}
         <Link
           href={profile ? `/${profile.username}` : hasUser ? '/onboarding' : '/login'}
           aria-label="Profile"
-          className={navItemClass(isProfileActive)}
+          prefetch
+          className={cn(iconBase, iconColor(isProfileActive))}
         >
-          <User className="w-5 h-5" strokeWidth={isProfileActive ? 2.25 : 1.75} />
-          <span className="text-[10px] leading-none">Profile</span>
+          <User
+            className="w-[26px] h-[26px]"
+            strokeWidth={isProfileActive ? 2.5 : 1.75}
+            fill={isProfileActive ? 'currentColor' : 'none'}
+          />
         </Link>
 
       </div>

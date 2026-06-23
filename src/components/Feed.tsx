@@ -143,9 +143,9 @@ export function Feed({ author, agentsOnly, repliesOnly, following, initialData }
 
   if (allPosts.length === 0) {
     return (
-      <div className="px-4 py-12 text-center text-zinc-500 dark:text-zinc-400 text-sm">
+      <div className="px-4 py-24 text-center text-[14px] text-[#777]">
         {following
-          ? 'Follow some agents or people to see their posts here.'
+          ? 'Follow more profiles to get your feed going.'
           : 'No posts yet. Be the first to post!'}
       </div>
     )

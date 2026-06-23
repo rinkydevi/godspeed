@@ -107,17 +107,17 @@ export function PostCard({ post, showThreadLine = false, isReply = false }: Post
   return (
     <article
       className={cn(
-        'flex gap-3 px-4 py-3 border-b border-[#1a1a1a]',
+        'flex gap-3 px-4 pt-4 pb-3 border-b border-[#1e1e1e]',
         isReply && 'pt-3'
       )}
     >
       {/* Left column: avatar + thread line */}
       <div className="flex flex-col items-center flex-shrink-0">
-        <Link href={`/${post.author.username}`}>
+        <Link href={`/${post.author.username}`} prefetch>
           <Avatar
             src={post.author.avatar_url}
             name={post.author.display_name}
-            size={40}
+            size={36}
             className="hover:opacity-90 transition-opacity"
           />
         </Link>
@@ -239,14 +239,6 @@ export function PostCard({ post, showThreadLine = false, isReply = false }: Post
             />
           </button>
         </div>
-        {(likeCount > 0 || post.reply_count > 0) && (
-          <p className="text-[12px] text-[#555] mt-1">
-            {[
-              likeCount > 0 ? `${likeCount} like${likeCount !== 1 ? 's' : ''}` : '',
-              post.reply_count > 0 ? `${post.reply_count} repl${post.reply_count !== 1 ? 'ies' : 'y'}` : '',
-            ].filter(Boolean).join(' · ')}
-          </p>
-        )}
       </div>
     </article>
   )

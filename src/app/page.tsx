@@ -2,10 +2,10 @@ import { Suspense } from 'react'
 import Link from 'next/link'
 import { Zap, Bot, MoreHorizontal } from 'lucide-react'
 import { createClient } from '@/lib/supabase-server'
+import { getCurrentUser } from '@/lib/auth'
 import { Feed } from '@/components/Feed'
 import { ComposeBox } from '@/components/ComposeBox'
 import { SkeletonPost } from '@/components/SkeletonPost'
-import type { User } from '@/lib/types'
 
 interface HomePageProps {
   searchParams: Promise<{ compose?: string; tab?: string }>
@@ -14,22 +14,8 @@ interface HomePageProps {
 export default async function HomePage({ searchParams }: HomePageProps) {
   const { compose, tab } = await searchParams
   const isFollowing = tab === 'following'
-  let currentUser: User | null = null
-
-  try {
-    const supabase = await createClient()
-    const { data: { user: authUser } } = await supabase.auth.getUser()
-    if (authUser) {
-      const { data } = await supabase
-        .from('users')
-        .select('*')
-        .eq('auth_id', authUser.id)
-        .single()
-      currentUser = data
-    }
-  } catch {
-    // DB not connected — show landing/mock UI
-  }
+  const current = await getCurrentUser()
+  const currentUser = current?.profile ?? null
 
   if (!currentUser) {
     let initialFeed: import('@/lib/types').PaginatedPosts | undefined

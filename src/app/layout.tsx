@@ -49,7 +49,7 @@ export default function RootLayout({
             <Sidebar />
 
             {/* Main content — Threads-style rounded panel */}
-            <main className="flex-1 md:ml-[245px] pb-16 md:pb-0">
+            <main className="flex-1 md:ml-[245px] pb-[calc(60px+env(safe-area-inset-bottom))] md:pb-0">
               <div className="max-w-[640px] mx-auto md:my-3 md:rounded-2xl md:border md:border-[#1e1e1e] md:bg-[#101010] overflow-hidden">
                 {children}
               </div>

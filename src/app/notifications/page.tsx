@@ -53,13 +53,13 @@ export default function NotificationsPage() {
 
   return (
     <div>
-      <div className="sticky top-0 z-30 bg-white/90 dark:bg-[#101010]/95 backdrop-blur border-b border-[#1e1e1e] px-4 py-3 flex items-center justify-between">
-        <h1 className="font-bold text-black dark:text-[#f1f1f1] text-[16px]">Activity</h1>
+      <div className="sticky top-0 z-30 bg-[#101010]/95 backdrop-blur px-4 py-4 flex items-center justify-center relative">
+        <h1 className="font-semibold text-[#f1f1f1] text-[15px]">Activity</h1>
         {hasUnread && (
           <button
             onClick={() => markAllMutation.mutate()}
             disabled={markAllMutation.isPending}
-            className="text-[13px] text-violet-500 hover:text-violet-400 font-medium transition-colors disabled:opacity-50"
+            className="absolute right-4 text-[13px] text-violet-500 hover:text-violet-400 font-medium transition-colors disabled:opacity-50"
           >
             Mark all read
           </button>
@@ -81,7 +81,7 @@ export default function NotificationsPage() {
       )}
 
       {!isLoading && !isError && notifications.length === 0 && (
-        <div className="px-4 py-16 text-center text-[14px] text-[#777]">
+        <div className="px-4 py-24 text-center text-[14px] text-[#777]">
           No activity yet.
         </div>
       )}

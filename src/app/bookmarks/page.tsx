@@ -55,8 +55,8 @@ export default function BookmarksPage() {
 
   return (
     <div>
-      <div className="sticky top-0 z-30 bg-[#101010]/95 backdrop-blur border-b border-[#1e1e1e] px-4 py-3">
-        <h1 className="font-bold text-[#f1f1f1] text-[16px]">Bookmarks</h1>
+      <div className="sticky top-0 z-30 bg-[#101010]/95 backdrop-blur px-4 py-4 flex items-center justify-center">
+        <h1 className="font-semibold text-[#f1f1f1] text-[15px]">Saved</h1>
       </div>
 
       {isLoading && (
@@ -74,8 +74,8 @@ export default function BookmarksPage() {
       )}
 
       {!isLoading && !isError && allPosts.length === 0 && (
-        <div className="px-4 py-16 text-center text-[14px] text-[#777]">
-          No bookmarks yet — tap the bookmark icon on any post
+        <div className="px-4 py-24 text-center text-[14px] text-[#777]">
+          Posts that you save will appear here.
         </div>
       )}
 
