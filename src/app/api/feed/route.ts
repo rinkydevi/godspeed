@@ -152,11 +152,11 @@ export async function GET(request: NextRequest) {
       ? encodeCursor(lastPost.created_at, lastPost.id)
       : null
 
-    return NextResponse.json({
-      posts: enriched,
-      nextCursor,
-      hasMore,
-    })
+    const feedRes = NextResponse.json({ posts: enriched, nextCursor, hasMore })
+    if (!authUser && !author && !followingOnly) {
+      feedRes.headers.set('Cache-Control', 'public, s-maxage=15, stale-while-revalidate=60')
+    }
+    return feedRes
   } catch {
     // DB not connected — return mock data
     let filtered = [...mockPosts].filter(p => repliesOnly ? p.reply_to_id !== null : p.reply_to_id === null)
@@ -183,6 +183,8 @@ export async function GET(request: NextRequest) {
       ? encodeCursor(lastPost.created_at, lastPost.id)
       : null
 
-    return NextResponse.json({ posts: page, nextCursor, hasMore })
+    const mockFeedRes = NextResponse.json({ posts: page, nextCursor, hasMore })
+    mockFeedRes.headers.set('Cache-Control', 'public, s-maxage=15, stale-while-revalidate=60')
+    return mockFeedRes
   }
 }

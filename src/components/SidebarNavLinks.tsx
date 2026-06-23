@@ -87,7 +87,7 @@ export function SidebarNavLinks({ profile, hasUser, userId }: SidebarNavLinksPro
   ]
 
   return (
-    <nav className="flex flex-col gap-0.5 flex-1">
+    <nav className="flex flex-col gap-0.5 flex-1 items-center w-full px-2">
       {navLinks.map(({ href, label, icon: Icon }) => {
         const active = isActive(pathname, href)
         const isBell = href === '/notifications'
@@ -95,23 +95,21 @@ export function SidebarNavLinks({ profile, hasUser, userId }: SidebarNavLinksPro
           <Link
             key={href}
             href={href}
+            title={label}
             className={cn(
-              'flex items-center gap-4 px-3 py-3 rounded-xl transition-colors',
+              'flex items-center justify-center w-[52px] h-[52px] rounded-xl transition-colors',
               active
                 ? 'text-[#f1f1f1]'
                 : 'text-[#999] hover:text-[#f1f1f1] hover:bg-[#1e1e1e]'
             )}
           >
             <span className="relative">
-              <Icon className="w-6 h-6" strokeWidth={active ? 2.25 : 1.75} />
+              <Icon className="w-[26px] h-[26px]" strokeWidth={active ? 2.25 : 1.75} />
               {isBell && unreadCount > 0 && !active && (
                 <span className="absolute -top-1 -right-1 min-w-[16px] h-4 rounded-full bg-rose-500 text-white text-[10px] font-bold flex items-center justify-center px-0.5 leading-none">
                   {unreadCount > 99 ? '99+' : unreadCount}
                 </span>
               )}
-            </span>
-            <span className={cn('text-[15px]', active ? 'font-bold' : 'font-medium')}>
-              {label}
             </span>
           </Link>
         )
@@ -120,32 +118,31 @@ export function SidebarNavLinks({ profile, hasUser, userId }: SidebarNavLinksPro
       {profile && (
         <Link
           href={`/${profile.username}`}
+          title="Profile"
           className={cn(
-            'flex items-center gap-4 px-3 py-3 rounded-xl transition-colors',
+            'flex items-center justify-center w-[52px] h-[52px] rounded-xl transition-colors',
             isProfileActive
               ? 'text-[#f1f1f1]'
               : 'text-[#999] hover:text-[#f1f1f1] hover:bg-[#1e1e1e]'
           )}
         >
-          <User className="w-6 h-6" strokeWidth={isProfileActive ? 2.25 : 1.75} />
-          <span className={cn('text-[15px]', isProfileActive ? 'font-bold' : 'font-medium')}>
-            Profile
-          </span>
+          <User className="w-[26px] h-[26px]" strokeWidth={isProfileActive ? 2.25 : 1.75} />
         </Link>
       )}
 
       {profile && (
         <Link
           href="/settings/agents"
+          title="Settings"
           className={cn(
-            'flex items-center gap-4 px-3 py-3 rounded-xl transition-colors',
+            'flex items-center justify-center w-[52px] h-[52px] rounded-xl transition-colors',
             isSettingsActive
               ? 'text-[#f1f1f1]'
               : 'text-[#999] hover:text-[#f1f1f1] hover:bg-[#1e1e1e]'
           )}
         >
           <svg
-            className="w-6 h-6"
+            className="w-[26px] h-[26px]"
             fill="none"
             stroke="currentColor"
             strokeWidth={isSettingsActive ? 2.25 : 1.75}
@@ -154,38 +151,36 @@ export function SidebarNavLinks({ profile, hasUser, userId }: SidebarNavLinksPro
             <circle cx="12" cy="12" r="3" />
             <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
           </svg>
-          <span className={cn('text-[15px]', isSettingsActive ? 'font-bold' : 'font-medium')}>
-            Settings
-          </span>
         </Link>
       )}
 
       {hasUser ? (
         <Link
           href="/?compose=1"
-          className="mt-4 flex items-center gap-4 px-3 py-3 rounded-xl text-[#f1f1f1] hover:bg-[#1e1e1e] transition-colors"
+          title="New thread"
+          className="mt-3 flex items-center justify-center w-[52px] h-[52px] rounded-xl text-[#f1f1f1] hover:bg-[#1e1e1e] transition-colors"
         >
-          <PenSquare className="w-6 h-6" strokeWidth={1.75} />
-          <span className="text-[15px] font-medium">New thread</span>
+          <PenSquare className="w-[26px] h-[26px]" strokeWidth={1.75} />
         </Link>
       ) : (
         <Link
           href="/login"
-          className="mt-4 mx-1 flex items-center justify-center py-2.5 rounded-xl border border-[#333] text-white font-semibold text-[15px] hover:bg-[#1e1e1e] transition-colors"
+          title="Sign in"
+          className="mt-3 flex items-center justify-center w-[52px] h-[52px] rounded-xl border border-[#333] text-white hover:bg-[#1e1e1e] transition-colors"
         >
-          Sign in
+          <User className="w-[22px] h-[22px]" strokeWidth={1.75} />
         </Link>
       )}
 
-      {/* Agent API link — always visible at the bottom */}
+      {/* Agent API */}
       <a
         href="/llms.txt"
         target="_blank"
         rel="noopener noreferrer"
-        className="mt-auto flex items-center gap-4 px-3 py-3 rounded-xl text-[#888] hover:text-[#f1f1f1] hover:bg-[#1e1e1e] transition-colors"
+        title="Agent API"
+        className="mt-auto flex items-center justify-center w-[52px] h-[52px] rounded-xl text-[#888] hover:text-[#f1f1f1] hover:bg-[#1e1e1e] transition-colors"
       >
-        <FileText className="w-5 h-5" strokeWidth={1.75} />
-        <span className="text-[13px] font-medium">Agent API</span>
+        <FileText className="w-[22px] h-[22px]" strokeWidth={1.75} />
       </a>
     </nav>
   )

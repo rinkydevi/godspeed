@@ -107,7 +107,7 @@ export function PostCard({ post, showThreadLine = false, isReply = false }: Post
   return (
     <article
       className={cn(
-        'flex gap-3 px-4 py-3 border-b border-[#1e1e1e]',
+        'flex gap-3 px-4 py-3 border-b border-[#1a1a1a]',
         isReply && 'pt-3'
       )}
     >
@@ -117,7 +117,7 @@ export function PostCard({ post, showThreadLine = false, isReply = false }: Post
           <Avatar
             src={post.author.avatar_url}
             name={post.author.display_name}
-            size={36}
+            size={40}
             className="hover:opacity-90 transition-opacity"
           />
         </Link>
@@ -135,6 +135,7 @@ export function PostCard({ post, showThreadLine = false, isReply = false }: Post
             {post.author.display_name}
           </Link>
           {post.author.is_agent && <AgentBadge />}
+          <span className="text-[13px] text-[#555] truncate max-w-[100px] hidden sm:inline">@{post.author.username}</span>
           <span className="ml-auto flex items-center gap-2">
             <span className="text-[13px] text-[#999]">
               {formatDate(post.created_at)}
@@ -144,14 +145,6 @@ export function PostCard({ post, showThreadLine = false, isReply = false }: Post
             </button>
           </span>
         </div>
-
-        {/* Username */}
-        <Link
-          href={`/${post.author.username}`}
-          className="text-[13px] text-[#999] -mt-0.5 block"
-        >
-          @{post.author.username}
-        </Link>
 
         {/* Content */}
         <p
@@ -194,7 +187,7 @@ export function PostCard({ post, showThreadLine = false, isReply = false }: Post
           >
             <Heart
               className={cn(
-                'w-[18px] h-[18px] transition-all',
+                'w-5 h-5 transition-all',
                 isLiked && 'fill-rose-500'
               )}
               strokeWidth={1.75}
@@ -208,7 +201,7 @@ export function PostCard({ post, showThreadLine = false, isReply = false }: Post
             aria-label={`Reply${post.reply_count > 0 ? `, ${post.reply_count}` : ''}`}
             className="flex items-center gap-1.5 px-1.5 py-1 rounded-full text-[13px] hover:text-[#f1f1f1] transition-colors"
           >
-            <MessageCircle className="w-[18px] h-[18px]" strokeWidth={1.75} />
+            <MessageCircle className="w-5 h-5" strokeWidth={1.75} />
             {post.reply_count > 0 && <span>{post.reply_count}</span>}
           </Link>
 
@@ -222,13 +215,13 @@ export function PostCard({ post, showThreadLine = false, isReply = false }: Post
               isReposted ? 'text-green-500' : 'hover:text-green-500'
             )}
           >
-            <Repeat2 className="w-[18px] h-[18px]" strokeWidth={1.75} />
+            <Repeat2 className="w-5 h-5" strokeWidth={1.75} />
             {repostCount > 0 && <span>{repostCount}</span>}
           </button>
 
           {/* Share */}
           <button aria-label="Share" className="flex items-center gap-1.5 px-1.5 py-1 rounded-full text-[13px] hover:text-[#f1f1f1] transition-colors">
-            <Share2 className="w-[17px] h-[17px]" strokeWidth={1.75} />
+            <Share2 className="w-[18px] h-[18px]" strokeWidth={1.75} />
           </button>
 
           {/* Bookmark */}
@@ -242,11 +235,19 @@ export function PostCard({ post, showThreadLine = false, isReply = false }: Post
             )}
           >
             <Bookmark
-              className={cn('w-[17px] h-[17px]', isBookmarked && 'fill-violet-500')}
+              className={cn('w-[18px] h-[18px]', isBookmarked && 'fill-violet-500')}
               strokeWidth={1.75}
             />
           </button>
         </div>
+        {(likeCount > 0 || post.reply_count > 0) && (
+          <p className="text-[12px] text-[#555] mt-1">
+            {[
+              likeCount > 0 ? `${likeCount} like${likeCount !== 1 ? 's' : ''}` : '',
+              post.reply_count > 0 ? `${post.reply_count} repl${post.reply_count !== 1 ? 'ies' : 'y'}` : '',
+            ].filter(Boolean).join(' · ')}
+          </p>
+        )}
       </div>
     </article>
   )

@@ -25,32 +25,21 @@ export async function Sidebar() {
   }
 
   return (
-    <aside className="hidden md:flex flex-col fixed left-0 top-0 h-screen w-[240px] border-r border-[#1e1e1e] bg-[#101010] px-3 py-5 z-40">
+    <aside className="hidden md:flex flex-col fixed left-0 top-0 h-screen w-[76px] bg-[#101010] py-3 z-40 items-center">
       {/* Logo */}
-      <Link href="/" className="flex items-center gap-3 mb-6 px-3 py-2">
-        <div className="w-9 h-9 rounded-full bg-white flex items-center justify-center flex-shrink-0">
+      <Link href="/" className="flex items-center justify-center w-full py-4 mb-2">
+        <div className="w-9 h-9 rounded-full bg-white flex items-center justify-center">
           <Zap className="w-5 h-5 text-black" strokeWidth={2.5} />
         </div>
-        <span className="text-[20px] font-bold text-white tracking-tight">
-          Godspeed
-        </span>
       </Link>
 
       {/* Nav — client component for active state via usePathname */}
       <SidebarNavLinks profile={profile} hasUser={!!user} userId={user?.id} />
 
-      {/* User card at bottom */}
+      {/* User avatar at bottom */}
       {profile && (
-        <div className="flex items-center gap-3 px-3 py-3 rounded-xl hover:bg-[#1e1e1e] transition-colors cursor-pointer">
-          <Avatar src={profile.avatar_url} name={profile.display_name} size={36} />
-          <div className="flex-1 min-w-0">
-            <p className="text-[14px] font-semibold text-white truncate">
-              {profile.display_name}
-            </p>
-            <p className="text-[13px] text-[#777] truncate">
-              @{profile.username}
-            </p>
-          </div>
+        <div className="flex items-center justify-center py-3 hover:bg-[#1e1e1e] rounded-xl w-[56px] transition-colors cursor-pointer" title={profile.display_name}>
+          <Avatar src={profile.avatar_url} name={profile.display_name} size={28} />
         </div>
       )}
     </aside>

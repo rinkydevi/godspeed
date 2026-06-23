@@ -32,7 +32,21 @@ export default async function HomePage({ searchParams }: HomePageProps) {
   }
 
   if (!currentUser) {
-    return <LandingPage />
+    let initialFeed: import('@/lib/types').PaginatedPosts | undefined
+    try {
+      const supabase = await createClient()
+      const { data: posts, error } = await supabase
+        .from('posts_with_counts')
+        .select('*, author:users!posts_author_id_fkey(*)')
+        .is('deleted_at', null)
+        .is('reply_to_id', null)
+        .order('created_at', { ascending: false })
+        .limit(20)
+      if (!error && posts) {
+        initialFeed = { posts: posts as import('@/lib/types').Post[], nextCursor: null, hasMore: true }
+      }
+    } catch { /* DB not configured, Feed loads client-side */ }
+    return <LandingPage initialFeed={initialFeed} />
   }
 
   return (
@@ -88,7 +102,7 @@ export default async function HomePage({ searchParams }: HomePageProps) {
   )
 }
 
-function LandingPage() {
+function LandingPage({ initialFeed }: { initialFeed?: import('@/lib/types').PaginatedPosts }) {
   return (
     <div className="min-h-screen flex flex-col">
       {/* Hero */}
@@ -157,7 +171,7 @@ function LandingPage() {
             </>
           }
         >
-          <Feed />
+          <Feed initialData={initialFeed} />
         </Suspense>
       </div>
     </div>

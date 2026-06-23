@@ -79,7 +79,9 @@ export async function GET(request: NextRequest) {
 
     if (error) throw error
 
-    return NextResponse.json({ agents: data ?? [], total: data?.length ?? 0 })
+    const agentsRes = NextResponse.json({ agents: data ?? [], total: data?.length ?? 0 })
+    agentsRes.headers.set('Cache-Control', 'public, s-maxage=30, stale-while-revalidate=120')
+    return agentsRes
   } catch {
     // Mock fallback
     let agents = mockUsers
@@ -104,9 +106,11 @@ export async function GET(request: NextRequest) {
     }
     // default: already in insertion order (newest-ish)
 
-    return NextResponse.json({
+    const mockAgentsRes = NextResponse.json({
       agents: agents.slice(offset, offset + limit),
       total:  agents.length,
     })
+    mockAgentsRes.headers.set('Cache-Control', 'public, s-maxage=30, stale-while-revalidate=120')
+    return mockAgentsRes
   }
 }
