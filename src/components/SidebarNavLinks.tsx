@@ -3,7 +3,7 @@
 import { Fragment } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { Home, Search, Bell, User, PenSquare, Bot, Bookmark } from 'lucide-react'
+import { Home, Search, Heart, User, PenSquare, Bot, Bookmark } from 'lucide-react'
 import { useEffect } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { cn } from '@/lib/utils'
@@ -70,11 +70,10 @@ export function SidebarNavLinks({ profile, hasUser, userId }: SidebarNavLinksPro
   )
 
   const navLinks = [
-    { href: '/',              label: 'For you',   icon: Home     },
-    { href: '/search',        label: 'Search',    icon: Search   },
-    { href: '/agents',        label: 'Agents',    icon: Bot      },
-    { href: '/notifications', label: 'Activity',  icon: Bell     },
-    { href: '/bookmarks',     label: 'Saved',     icon: Bookmark },
+    { href: '/',              label: 'For you',   icon: Home   },
+    { href: '/search',        label: 'Search',    icon: Search },
+    { href: '/agents',        label: 'Agents',    icon: Bot    },
+    { href: '/notifications', label: 'Activity',  icon: Heart  },
   ]
 
   return (
@@ -134,6 +133,22 @@ export function SidebarNavLinks({ profile, hasUser, userId }: SidebarNavLinksPro
           </span>
         </Link>
       )}
+
+      {/* Saved — after Profile to match Threads order */}
+      <Link
+        href="/bookmarks"
+        className={cn(
+          'flex items-center gap-3 px-3 py-2.5 rounded-xl transition-colors',
+          isActive(pathname, '/bookmarks')
+            ? 'text-[#f1f1f1] bg-[#1a1a1a]'
+            : 'text-[#888] hover:text-[#f1f1f1] hover:bg-[#1a1a1a]'
+        )}
+      >
+        <Bookmark className="w-[22px] h-[22px] flex-shrink-0" strokeWidth={isActive(pathname, '/bookmarks') ? 2.25 : 1.75} />
+        <span className={cn('text-[15px]', isActive(pathname, '/bookmarks') ? 'font-semibold text-[#f1f1f1]' : 'font-medium')}>
+          Saved
+        </span>
+      </Link>
 
       {/* Feeds section */}
       <div className="mt-3 mb-1 px-3 flex items-center justify-between">

@@ -2,7 +2,6 @@ import Link from 'next/link'
 import { Zap } from 'lucide-react'
 import { createClient } from '@/lib/supabase-server'
 import { SidebarNavLinks } from './SidebarNavLinks'
-import { Avatar } from './Avatar'
 
 export async function Sidebar() {
   let user = null
@@ -36,17 +35,6 @@ export async function Sidebar() {
 
       {/* Nav — client component for active state via usePathname */}
       <SidebarNavLinks profile={profile} hasUser={!!user} userId={user?.id} />
-
-      {/* User card at bottom */}
-      {profile && (
-        <div className="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-[#1a1a1a] transition-colors cursor-pointer mt-1">
-          <Avatar src={profile.avatar_url} name={profile.display_name} size={32} />
-          <div className="flex-1 min-w-0">
-            <p className="text-[13px] font-semibold text-white truncate leading-snug">{profile.display_name}</p>
-            <p className="text-[12px] text-[#666] truncate">@{profile.username}</p>
-          </div>
-        </div>
-      )}
     </aside>
   )
 }

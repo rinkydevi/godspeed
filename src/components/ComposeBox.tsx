@@ -134,11 +134,11 @@ export function ComposeBox({
   const showPreview = !!previewPostId && previewPostId !== dismissedPreviewId
 
   return (
-    <div className="border-b border-[#1e1e1e] px-4 py-4">
-      <div className="flex gap-3">
-        <Avatar src={user.avatar_url} name={user.display_name} size={36} />
+    <div className="border-b border-[#1e1e1e] px-4 py-3.5">
+      <div className="flex gap-3 items-center">
+        <Avatar src={user.avatar_url} name={user.display_name} size={32} />
 
-        <div className="flex-1">
+        <div className="flex-1 flex items-center gap-2">
           <input
             ref={fileInputRef}
             type="file"
@@ -158,11 +158,20 @@ export function ComposeBox({
             autoFocus={autoFocus}
             rows={focused || content ? 3 : 1}
             className={cn(
-              'w-full resize-none bg-transparent text-black dark:text-[#f1f1f1] placeholder:text-zinc-400 dark:placeholder:text-[#555]',
+              'flex-1 resize-none bg-transparent text-[#f1f1f1] placeholder:text-[#666]',
               'text-[15px] leading-relaxed outline-none transition-all',
               'border-0 p-0'
             )}
           />
+
+          {!focused && !content && !imageUrl && (
+            <button
+              disabled
+              className="px-4 py-1.5 rounded-full text-[14px] font-semibold bg-transparent border border-[#2a2a2a] text-[#555] cursor-not-allowed"
+            >
+              Post
+            </button>
+          )}
 
           {showPreview && (
             <LinkPreview
