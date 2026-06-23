@@ -1,6 +1,7 @@
 'use client'
 
 import { useInfiniteQuery } from '@tanstack/react-query'
+import { useEffect, useRef } from 'react'
 import { PostCard } from '@/components/PostCard'
 import { SkeletonPost } from '@/components/SkeletonPost'
 import type { Post, PaginatedPosts } from '@/lib/types'
@@ -27,6 +28,23 @@ export default function BookmarksPage() {
     initialPageParam: null as string | null,
     getNextPageParam: (lastPage) => lastPage.hasMore ? lastPage.nextCursor : undefined,
   })
+
+  const sentinelRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    const el = sentinelRef.current
+    if (!el) return
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && hasNextPage && !isFetchingNextPage) {
+          fetchNextPage()
+        }
+      },
+      { rootMargin: '400px' },
+    )
+    observer.observe(el)
+    return () => observer.disconnect()
+  }, [hasNextPage, isFetchingNextPage, fetchNextPage])
 
   const seen = new Set<string>()
   const allPosts = (data?.pages.flatMap((page) => page.posts) ?? []).filter((post) => {
@@ -67,17 +85,14 @@ export default function BookmarksPage() {
             <PostCard key={post.id} post={post} />
           ))}
 
-          {(hasNextPage || isFetchingNextPage) && (
-            <div className="px-4 py-4 text-center">
-              <button
-                onClick={() => fetchNextPage()}
-                disabled={isFetchingNextPage}
-                className="text-sm text-violet-400 hover:underline font-medium disabled:opacity-50"
-              >
-                {isFetchingNextPage ? 'Loading...' : 'Load more'}
-              </button>
-            </div>
-          )}
+          <div ref={sentinelRef} className="py-6 flex justify-center">
+            {isFetchingNextPage && (
+              <div className="w-5 h-5 rounded-full border-2 border-zinc-700 border-t-violet-500 animate-spin" />
+            )}
+            {!hasNextPage && allPosts.length > 0 && (
+              <p className="text-xs text-zinc-600">you&apos;re all caught up</p>
+            )}
+          </div>
         </div>
       )}
     </div>

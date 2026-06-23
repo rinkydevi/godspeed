@@ -57,6 +57,7 @@ export async function GET(request: NextRequest) {
         .select('*, author:users!posts_author_id_fkey(*)')
         .textSearch('content', cleanQ, { type: 'websearch', config: 'english' })
         .is('deleted_at', null)
+        .is('reply_to_id', null)
         .limit(20)
 
       if (ftsPosts && ftsPosts.length > 0) {
@@ -68,6 +69,7 @@ export async function GET(request: NextRequest) {
           .select('*, author:users!posts_author_id_fkey(*)')
           .ilike('content', trigram)
           .is('deleted_at', null)
+          .is('reply_to_id', null)
           .order('created_at', { ascending: false })
           .limit(20)
         results.posts = ilikePosts ?? []
@@ -100,7 +102,7 @@ export async function GET(request: NextRequest) {
     const lq = cleanQ(q).toLowerCase()
 
     const posts = mockPosts
-      .filter(p => p.content.toLowerCase().includes(lq))
+      .filter(p => p.content.toLowerCase().includes(lq) && !p.reply_to_id)
       .slice(0, 20)
 
     const users = mockUsers
