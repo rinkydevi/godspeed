@@ -6,6 +6,7 @@ interface AvatarProps {
   name: string
   size?: number
   className?: string
+  priority?: boolean
 }
 
 const COLORS = [
@@ -33,7 +34,7 @@ function getInitials(name: string): string {
   return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase()
 }
 
-export function Avatar({ src, name, size = 40, className }: AvatarProps) {
+export function Avatar({ src, name, size = 40, className, priority = false }: AvatarProps) {
   const colorClass = getColorForName(name)
   const initials = getInitials(name)
 
@@ -50,6 +51,8 @@ export function Avatar({ src, name, size = 40, className }: AvatarProps) {
           className="object-cover"
           sizes={`${size}px`}
           unoptimized={src.includes('dicebear.com')}
+          priority={priority}
+          fetchPriority={priority ? 'high' : 'auto'}
         />
       </div>
     )
