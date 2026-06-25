@@ -113,8 +113,8 @@ export function ComposeBox({
 
   if (!user) {
     return (
-      <div className="px-4 py-4 border-b border-[#1e1e1e] text-center text-[14px] text-[#777]">
-        <Link href="/login" className="font-semibold text-[#f1f1f1] hover:underline">Sign in</Link> to post
+      <div className="px-4 py-4 border-b border-[#262626] text-center text-[14px] text-[#777]">
+        <Link href="/login" className="font-semibold text-[#f3f5f7] hover:underline">Sign in</Link> to post
       </div>
     )
   }
@@ -134,11 +134,11 @@ export function ComposeBox({
   const showPreview = !!previewPostId && previewPostId !== dismissedPreviewId
 
   return (
-    <div className="border-b border-[#1e1e1e] px-4 py-3.5">
-      <div className="flex gap-3 items-center">
-        <Avatar src={user.avatar_url} name={user.display_name} size={32} />
+    <div className="border-b border-[#262626] px-4 md:px-6 py-3">
+      <div className="flex gap-3 items-start">
+        <Avatar src={user.avatar_url} name={user.display_name} size={36} />
 
-        <div className="flex-1 flex items-center gap-2">
+        <div className="flex-1 min-w-0 pt-1">
           <input
             ref={fileInputRef}
             type="file"
@@ -147,31 +147,36 @@ export function ComposeBox({
             onChange={handleFileChange}
           />
 
-          <textarea
-            ref={textareaRef}
-            value={content}
-            onChange={(e) => setContent(e.target.value)}
-            onFocus={() => setFocused(true)}
-            onBlur={() => !content && !imageUrl && setFocused(false)}
-            onKeyDown={handleKeyDown}
-            placeholder={placeholder}
-            autoFocus={autoFocus}
-            rows={focused || content ? 3 : 1}
-            className={cn(
-              'flex-1 resize-none bg-transparent text-[#f1f1f1] placeholder:text-[#666]',
-              'text-[15px] leading-relaxed outline-none transition-all',
-              'border-0 p-0'
-            )}
-          />
+          <div className="text-[14px] font-semibold text-[#f3f5f7] leading-tight">
+            {user.username}
+          </div>
 
-          {!focused && !content && !imageUrl && (
-            <button
-              disabled
-              className="px-4 py-1.5 rounded-full text-[14px] font-semibold bg-transparent border border-[#2a2a2a] text-[#555] cursor-not-allowed"
-            >
-              Post
-            </button>
-          )}
+          <div className="flex items-start gap-2 mt-0.5">
+            <textarea
+              ref={textareaRef}
+              value={content}
+              onChange={(e) => setContent(e.target.value)}
+              onFocus={() => setFocused(true)}
+              onBlur={() => !content && !imageUrl && setFocused(false)}
+              onKeyDown={handleKeyDown}
+              placeholder={placeholder}
+              autoFocus={autoFocus}
+              rows={focused || content ? 3 : 1}
+              className={cn(
+                'flex-1 resize-none bg-transparent text-[#f3f5f7] placeholder:text-[#777]',
+                'text-[15px] leading-[1.47] outline-none border-0 p-0'
+              )}
+            />
+
+            {!focused && !content && !imageUrl && (
+              <button
+                disabled
+                className="h-9 px-4 rounded-full text-[14px] font-semibold bg-[#f3f5f7]/95 text-[#777] cursor-not-allowed flex-shrink-0"
+              >
+                Post
+              </button>
+            )}
+          </div>
 
           {showPreview && (
             <LinkPreview
@@ -181,7 +186,7 @@ export function ComposeBox({
           )}
 
           {imageUrl && (
-            <div className="relative mt-3 rounded-2xl overflow-hidden border border-zinc-200 dark:border-zinc-800 inline-block">
+            <div className="relative mt-3 rounded-xl overflow-hidden border border-[#262626] inline-block">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src={imageUrl}
@@ -190,7 +195,7 @@ export function ComposeBox({
               />
               <button
                 onClick={() => setImageUrl(null)}
-                className="absolute top-2 right-2 w-6 h-6 rounded-full bg-zinc-900/70 text-white flex items-center justify-center hover:bg-zinc-900 transition-colors"
+                className="absolute top-2 right-2 w-6 h-6 rounded-full bg-black/70 text-white flex items-center justify-center hover:bg-black transition-colors"
                 aria-label="Remove image"
               >
                 <X className="w-3.5 h-3.5" />
@@ -199,19 +204,19 @@ export function ComposeBox({
           )}
 
           {(focused || content || imageUrl) && (
-            <div className="flex items-center justify-between mt-3 pt-3 border-t border-[#1e1e1e]">
+            <div className="flex items-center justify-between mt-2">
               <div className="flex items-center gap-3">
                 {!imageUrl && (
                   <button
                     onClick={() => fileInputRef.current?.click()}
                     onMouseDown={(e) => e.preventDefault()}
                     disabled={uploading}
-                    className="text-[#555] hover:text-[#f1f1f1] transition-colors disabled:opacity-50"
+                    className="text-[#777] hover:text-[#f3f5f7] transition-colors disabled:opacity-50"
                     aria-label="Attach image"
                   >
                     {uploading
-                      ? <Loader2 className="w-[18px] h-[18px] animate-spin" />
-                      : <ImagePlus className="w-[18px] h-[18px]" strokeWidth={1.75} />
+                      ? <Loader2 className="w-[22px] h-[22px] animate-spin" />
+                      : <ImagePlus className="w-[22px] h-[22px]" strokeWidth={1.75} />
                     }
                   </button>
                 )}
@@ -219,22 +224,19 @@ export function ComposeBox({
                 {(isNearLimit || isOverLimit) && (
                   <span className={cn(
                     'text-xs font-medium tabular-nums',
-                    isOverLimit ? 'text-rose-500' : 'text-amber-500'
+                    isOverLimit ? 'text-[#ff3040]' : 'text-amber-500'
                   )}>
                     {remaining}
                   </span>
-                )}
-                {!isNearLimit && !isOverLimit && (
-                  <span className="text-[12px] text-zinc-400">{remaining}</span>
                 )}
               </div>
 
               <div className="flex items-center gap-2">
                 {uploadError && (
-                  <span className="text-xs text-rose-500">{uploadError}</span>
+                  <span className="text-xs text-[#ff3040]">{uploadError}</span>
                 )}
                 {mutation.isError && (
-                  <span className="text-xs text-rose-500">
+                  <span className="text-xs text-[#ff3040]">
                     {mutation.error instanceof Error ? mutation.error.message : 'Failed to post'}
                   </span>
                 )}
@@ -243,10 +245,10 @@ export function ComposeBox({
                   onMouseDown={(e) => e.preventDefault()}
                   disabled={!canSubmit}
                   className={cn(
-                    'px-4 py-1.5 rounded-full text-[14px] font-semibold transition-all',
+                    'h-9 px-4 rounded-full text-[14px] font-semibold transition-all',
                     canSubmit
-                      ? 'bg-white text-black hover:bg-[#e8e8e8]'
-                      : 'bg-[#1e1e1e] text-[#555] cursor-not-allowed'
+                      ? 'bg-[#f3f5f7] text-black hover:bg-[#d8d8d8]'
+                      : 'bg-[#f3f5f7]/95 text-[#777] cursor-not-allowed'
                   )}
                 >
                   {mutation.isPending ? 'Posting…' : 'Post'}

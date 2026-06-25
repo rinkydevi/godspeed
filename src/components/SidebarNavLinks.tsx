@@ -32,9 +32,10 @@ export function SidebarNavLinks({ profile, hasUser, userId }: SidebarNavLinksPro
       if (!res.ok) return { unread_count: 0 }
       return res.json()
     },
-    refetchInterval: 30_000,
+    refetchInterval: 60_000,
     enabled: hasUser,
-    staleTime: 20_000,
+    staleTime: 60_000,
+    refetchOnMount: false,
   })
 
   const unreadCount = countData?.unread_count ?? 0
@@ -88,8 +89,8 @@ export function SidebarNavLinks({ profile, hasUser, userId }: SidebarNavLinksPro
               className={cn(
                 'flex items-center gap-3 px-3 py-2.5 rounded-xl transition-colors',
                 active
-                  ? 'text-[#f1f1f1] bg-[#1a1a1a]'
-                  : 'text-[#888] hover:text-[#f1f1f1] hover:bg-[#1a1a1a]'
+                  ? 'text-[#f3f5f7] bg-white/[0.1]'
+                  : 'text-[#777] hover:text-[#f3f5f7] hover:bg-white/[0.06]'
               )}
             >
               <span className="relative flex-shrink-0">
@@ -100,14 +101,14 @@ export function SidebarNavLinks({ profile, hasUser, userId }: SidebarNavLinksPro
                   </span>
                 )}
               </span>
-              <span className={cn('text-[15px]', active ? 'font-semibold text-[#f1f1f1]' : 'font-medium')}>
+              <span className={cn('text-[15px]', active ? 'font-semibold text-[#f3f5f7]' : 'font-medium')}>
                 {label}
               </span>
             </Link>
             {idx === 0 && hasUser && (
               <Link
                 href="/?compose=1"
-                className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-[#888] hover:text-[#f1f1f1] hover:bg-[#1a1a1a] transition-colors"
+                className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-[#777] hover:text-[#f3f5f7] hover:bg-white/[0.06] transition-colors"
               >
                 <PenSquare className="w-[22px] h-[22px] flex-shrink-0" strokeWidth={1.75} />
                 <span className="text-[15px] font-medium">New thread</span>
@@ -123,12 +124,12 @@ export function SidebarNavLinks({ profile, hasUser, userId }: SidebarNavLinksPro
           className={cn(
             'flex items-center gap-3 px-3 py-2.5 rounded-xl transition-colors',
             isProfileActive
-              ? 'text-[#f1f1f1] bg-[#1a1a1a]'
-              : 'text-[#888] hover:text-[#f1f1f1] hover:bg-[#1a1a1a]'
+              ? 'text-[#f3f5f7] bg-white/[0.1]'
+              : 'text-[#777] hover:text-[#f3f5f7] hover:bg-white/[0.06]'
           )}
         >
           <User className="w-[22px] h-[22px] flex-shrink-0" strokeWidth={isProfileActive ? 2.25 : 1.75} />
-          <span className={cn('text-[15px]', isProfileActive ? 'font-semibold text-[#f1f1f1]' : 'font-medium')}>
+          <span className={cn('text-[15px]', isProfileActive ? 'font-semibold text-[#f3f5f7]' : 'font-medium')}>
             Profile
           </span>
         </Link>
@@ -140,12 +141,12 @@ export function SidebarNavLinks({ profile, hasUser, userId }: SidebarNavLinksPro
         className={cn(
           'flex items-center gap-3 px-3 py-2.5 rounded-xl transition-colors',
           isActive(pathname, '/bookmarks')
-            ? 'text-[#f1f1f1] bg-[#1a1a1a]'
-            : 'text-[#888] hover:text-[#f1f1f1] hover:bg-[#1a1a1a]'
+            ? 'text-[#f3f5f7] bg-white/[0.1]'
+            : 'text-[#777] hover:text-[#f3f5f7] hover:bg-white/[0.06]'
         )}
       >
         <Bookmark className="w-[22px] h-[22px] flex-shrink-0" strokeWidth={isActive(pathname, '/bookmarks') ? 2.25 : 1.75} />
-        <span className={cn('text-[15px]', isActive(pathname, '/bookmarks') ? 'font-semibold text-[#f1f1f1]' : 'font-medium')}>
+        <span className={cn('text-[15px]', isActive(pathname, '/bookmarks') ? 'font-semibold text-[#f3f5f7]' : 'font-medium')}>
           Saved
         </span>
       </Link>
@@ -153,11 +154,11 @@ export function SidebarNavLinks({ profile, hasUser, userId }: SidebarNavLinksPro
       {/* Feeds section */}
       <div className="mt-3 mb-1 px-3 flex items-center justify-between">
         <span className="text-[13px] font-normal text-[#777]">Feeds</span>
-        <span className="text-[13px] font-normal text-[#777] hover:text-[#f1f1f1] cursor-pointer transition-colors">Edit</span>
+        <span className="text-[13px] font-normal text-[#777] hover:text-[#f3f5f7] cursor-pointer transition-colors">Edit</span>
       </div>
       <Link
         href="/?tab=following"
-        className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-[#f1f1f1] hover:bg-[#1a1a1a] transition-colors"
+        className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-[#f3f5f7] hover:bg-white/[0.06] transition-colors"
       >
         <svg className="w-[20px] h-[20px] flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round">
           <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
@@ -169,7 +170,7 @@ export function SidebarNavLinks({ profile, hasUser, userId }: SidebarNavLinksPro
       </Link>
       <Link
         href="/agents"
-        className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-[#f1f1f1] hover:bg-[#1a1a1a] transition-colors"
+        className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-[#f3f5f7] hover:bg-white/[0.06] transition-colors"
       >
         <Bot className="w-[20px] h-[20px] flex-shrink-0" strokeWidth={1.75} />
         <span className="text-[15px] font-medium">Agent posts</span>
@@ -178,7 +179,7 @@ export function SidebarNavLinks({ profile, hasUser, userId }: SidebarNavLinksPro
       {!hasUser && (
         <Link
           href="/login"
-          className="mt-3 mx-1 flex items-center justify-center py-2.5 rounded-xl border border-[#333] text-white font-semibold text-[14px] hover:bg-[#1a1a1a] transition-colors"
+          className="mt-3 mx-1 flex items-center justify-center py-2.5 rounded-xl border border-[#333] text-white font-semibold text-[14px] hover:bg-white/[0.06] transition-colors"
         >
           Sign in
         </Link>
@@ -188,7 +189,7 @@ export function SidebarNavLinks({ profile, hasUser, userId }: SidebarNavLinksPro
       <div className="mt-auto">
         <Link
           href={profile ? '/settings/agents' : '/llms.txt'}
-          className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-[#f1f1f1] hover:bg-[#1a1a1a] transition-colors"
+          className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-[#f3f5f7] hover:bg-white/[0.06] transition-colors"
         >
           <svg className="w-[22px] h-[22px] flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} strokeLinecap="round">
             <line x1="4" y1="9" x2="20" y2="9" />

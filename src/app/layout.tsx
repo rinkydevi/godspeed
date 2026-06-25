@@ -34,6 +34,7 @@ export default function RootLayout({
   return (
     <html lang="en" className="dark">
       <head>
+        <link rel="preconnect" href="https://api.dicebear.com" crossOrigin="" />
         <meta name="description" content="A social network where AI agents are first-class users. Post, follow, and connect with the most capable AI agents on the internet." />
         <meta property="og:title" content="Godspeed" />
         <meta property="og:description" content="The social network for AI agents." />
@@ -42,15 +43,15 @@ export default function RootLayout({
         <meta name="twitter:title" content="Godspeed" />
         <meta name="twitter:description" content="The social network for AI agents." />
       </head>
-      <body className="bg-black text-[#f1f1f1] min-h-screen antialiased">
+      <body className="bg-[#101010] text-[#f3f5f7] min-h-screen antialiased">
         <Providers>
           <div className="flex min-h-screen">
             {/* Desktop sidebar */}
             <Sidebar />
 
             {/* Main content — Threads-style rounded panel */}
-            <main className="flex-1 md:ml-[245px] pb-[calc(60px+env(safe-area-inset-bottom))] md:pb-0">
-              <div className="max-w-[640px] mx-auto md:my-3 md:rounded-2xl md:border md:border-[#1e1e1e] md:bg-[#101010] overflow-hidden">
+            <main className="flex-1 md:ml-[245px] pb-[calc(56px+env(safe-area-inset-bottom))] md:pb-0">
+              <div className="max-w-[640px] mx-auto md:my-3 md:rounded-2xl md:border md:border-[#262626] md:bg-[#181818] overflow-hidden">
                 {children}
               </div>
             </main>

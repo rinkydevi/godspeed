@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import Image from 'next/image'
 import { useRouter } from 'next/navigation'
-import { Heart, MessageCircle, Repeat2, Share2, MoreHorizontal, Bookmark } from 'lucide-react'
+import { Heart, MessageCircle, Repeat2, Share2, MoreHorizontal } from 'lucide-react'
 import { useState } from 'react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { Avatar } from './Avatar'
@@ -25,13 +25,12 @@ export function PostCard({ post, showThreadLine = false, isReply = false }: Post
   const [optimisticCount, setOptimisticCount] = useState<number | null>(null)
   const [optimisticReposted, setOptimisticReposted] = useState<boolean | null>(null)
   const [optimisticRepostCount, setOptimisticRepostCount] = useState<number | null>(null)
-  const [optimisticBookmarked, setOptimisticBookmarked] = useState<boolean | null>(null)
+  const [likeAnimKey, setLikeAnimKey] = useState(0)
 
   const isLiked = optimisticLiked ?? post.is_liked ?? false
   const likeCount = optimisticCount ?? post.like_count ?? 0
   const isReposted = optimisticReposted ?? post.is_reposted ?? false
   const repostCount = optimisticRepostCount ?? post.repost_count ?? 0
-  const isBookmarked = optimisticBookmarked ?? post.is_bookmarked ?? false
 
   const likeMutation = useMutation({
     mutationFn: async () => {
@@ -40,8 +39,10 @@ export function PostCard({ post, showThreadLine = false, isReply = false }: Post
       return res.json()
     },
     onMutate: () => {
-      setOptimisticLiked(!isLiked)
+      const next = !isLiked
+      setOptimisticLiked(next)
       setOptimisticCount(isLiked ? likeCount - 1 : likeCount + 1)
+      if (next) setLikeAnimKey((k) => k + 1)
     },
     onError: () => {
       setOptimisticLiked(null)
@@ -52,17 +53,6 @@ export function PostCard({ post, showThreadLine = false, isReply = false }: Post
       setOptimisticCount(data.like_count)
       queryClient.invalidateQueries({ queryKey: ['feed'] })
     },
-  })
-
-  const bookmarkMutation = useMutation({
-    mutationFn: async () => {
-      const res = await fetch(`/api/posts/${post.id}/bookmark`, { method: 'POST' })
-      if (!res.ok) throw new Error('Failed to toggle bookmark')
-      return res.json()
-    },
-    onMutate: () => setOptimisticBookmarked(!isBookmarked),
-    onError: () => setOptimisticBookmarked(null),
-    onSuccess: (data) => setOptimisticBookmarked(data.is_bookmarked),
   })
 
   const repostMutation = useMutation({
@@ -86,8 +76,6 @@ export function PostCard({ post, showThreadLine = false, isReply = false }: Post
   })
 
   function linkifyContent(raw: string) {
-    // Escape HTML special chars — apostrophes are safe in text content and
-    // must NOT be encoded here because &#39; confuses the hashtag regex (#39).
     const escaped = raw
       .replace(/&/g, '&amp;')
       .replace(/</g, '&lt;')
@@ -96,23 +84,24 @@ export function PostCard({ post, showThreadLine = false, isReply = false }: Post
     return escaped
       .replace(
         /#(\w+)/g,
-        '<a href="/search?q=%23$1" class="text-violet-600 dark:text-violet-400 underline underline-offset-2 decoration-violet-400/40 hover:decoration-violet-400">#$1</a>'
+        '<a href="/search?q=%23$1" class="text-[#0095f6] hover:underline">#$1</a>'
       )
       .replace(
         /@(\w+)/g,
-        '<a href="/$1" class="text-violet-600 dark:text-violet-400 underline underline-offset-2 decoration-violet-400/40 hover:decoration-violet-400">@$1</a>'
+        '<a href="/$1" class="text-[#0095f6] hover:underline">@$1</a>'
       )
   }
 
   return (
     <article
       className={cn(
-        'flex gap-3 px-4 pt-4 pb-3 border-b border-[#1e1e1e]',
+        'grid border-b border-[#262626]',
+        'grid-cols-[48px_1fr] px-4 md:px-6 pt-3 pb-2',
         isReply && 'pt-3'
       )}
     >
-      {/* Left column: avatar + thread line */}
-      <div className="flex flex-col items-center flex-shrink-0">
+      {/* Avatar column — fixed 48px wide, avatar is 36px */}
+      <div className="flex flex-col items-center row-span-4">
         <Link href={`/${post.author.username}`} prefetch>
           <Avatar
             src={post.author.avatar_url}
@@ -124,121 +113,107 @@ export function PostCard({ post, showThreadLine = false, isReply = false }: Post
         {showThreadLine && <ThreadLine />}
       </div>
 
-      {/* Right column: content */}
-      <div className="flex-1 min-w-0 pb-1">
-        {/* Header */}
-        <div className="flex items-center gap-1.5 mb-0.5">
-          <Link
-            href={`/${post.author.username}`}
-            className="font-semibold text-[14px] text-black dark:text-[#f1f1f1] hover:underline leading-tight"
-          >
-            {post.author.display_name}
-          </Link>
-          {post.author.is_agent && <AgentBadge />}
-          <span className="ml-auto flex items-center gap-2">
-            <span className="text-[13px] text-[#999]">
-              {formatDate(post.created_at)}
-            </span>
-            <button aria-label="More options" className="text-[#777] hover:text-[#aaa] p-2 -mr-1.5 rounded transition-colors">
-              <MoreHorizontal className="w-4 h-4" />
-            </button>
-          </span>
+      {/* Header row */}
+      <div className="flex items-center min-w-0">
+        <Link
+          href={`/${post.author.username}`}
+          prefetch
+          className="font-semibold text-[15px] text-[#f3f5f7] hover:underline leading-[1.27] truncate"
+        >
+          {post.author.display_name}
+        </Link>
+        {post.author.is_agent && <span className="ml-1"><AgentBadge /></span>}
+        <span className="text-[#777] mx-1.5">·</span>
+        <span className="text-[13px] text-[#777] flex-shrink-0">
+          {formatDate(post.created_at)}
+        </span>
+        <button
+          aria-label="More options"
+          className="ml-auto text-[#777] hover:text-[#f3f5f7] p-1.5 -mr-1.5 rounded-full transition-colors"
+        >
+          <MoreHorizontal className="w-[18px] h-[18px]" />
+        </button>
+      </div>
+
+      {/* Body */}
+      <p
+        className="text-[15px] text-[#f3f5f7] leading-[1.33] whitespace-pre-wrap mt-0.5 cursor-pointer"
+        style={{ overflowWrap: 'anywhere' }}
+        dangerouslySetInnerHTML={{ __html: linkifyContent(post.content) }}
+        onClick={(e) => {
+          if ((e.target as HTMLElement).tagName !== 'A') {
+            router.push(`/${post.author.username}/${post.id}`)
+          }
+        }}
+      />
+
+      {/* Media */}
+      {post.image_url && (
+        <div className="mt-2 rounded-xl overflow-hidden border border-[#262626]">
+          <Image
+            src={post.image_url}
+            alt=""
+            width={0}
+            height={0}
+            sizes="(max-width: 768px) 100vw, 572px"
+            className="w-full h-auto max-h-80 object-cover"
+          />
         </div>
+      )}
 
-        {/* Content */}
-        <p
-          className="text-[15px] text-black dark:text-[#f1f1f1] leading-[1.55] whitespace-pre-wrap break-words mt-1.5 cursor-pointer"
-          dangerouslySetInnerHTML={{ __html: linkifyContent(post.content) }}
-          onClick={(e) => {
-            if ((e.target as HTMLElement).tagName !== 'A') {
-              router.push(`/${post.author.username}/${post.id}`)
-            }
-          }}
-        />
-
-        {/* Attached image */}
-        {post.image_url && (
-          <div className="mt-3 rounded-2xl overflow-hidden border border-zinc-100 dark:border-zinc-900">
-            <Image
-              src={post.image_url}
-              alt=""
-              width={0}
-              height={0}
-              sizes="(max-width: 768px) 100vw, 620px"
-              className="w-full h-auto max-h-80 object-cover"
-            />
-          </div>
-        )}
-
-        {/* Action bar */}
-        <div className="flex items-center gap-1 mt-2.5 -ml-1.5 text-[#999]">
-          {/* Like */}
-          <button
-            onClick={() => likeMutation.mutate()}
-            aria-label={`${isLiked ? 'Unlike' : 'Like'}${likeCount > 0 ? `, ${likeCount}` : ''}`}
+      {/* Action row */}
+      <div className="flex items-center gap-1 mt-2 -ml-2 text-[#777]">
+        <button
+          onClick={() => likeMutation.mutate()}
+          aria-label={isLiked ? 'Unlike' : 'Like'}
+          disabled={likeMutation.isPending}
+          className={cn(
+            'flex items-center gap-1 h-8 px-2 rounded-full text-[13px] font-medium transition-colors',
+            'hover:bg-[#ff3040]/10',
+            isLiked ? 'text-[#ff3040]' : 'hover:text-[#f3f5f7]'
+          )}
+        >
+          <Heart
+            key={`heart-${likeAnimKey}`}
             className={cn(
-              'flex items-center gap-1.5 px-1.5 py-1 rounded-full text-[13px] transition-colors',
-              isLiked
-                ? 'text-rose-500'
-                : 'hover:text-rose-500'
+              'w-5 h-5',
+              isLiked && 'fill-[#ff3040] animate-like-pop'
             )}
-            disabled={likeMutation.isPending}
-          >
-            <Heart
-              className={cn(
-                'w-5 h-5 transition-all',
-                isLiked && 'fill-rose-500'
-              )}
-              strokeWidth={1.75}
-            />
-            {likeCount > 0 && <span>{likeCount}</span>}
-          </button>
+            strokeWidth={1.75}
+          />
+          {likeCount > 0 && <span className="tabular-nums">{likeCount}</span>}
+        </button>
 
-          {/* Reply */}
-          <Link
-            href={`/${post.author.username}/${post.id}`}
-            aria-label={`Reply${post.reply_count > 0 ? `, ${post.reply_count}` : ''}`}
-            className="flex items-center gap-1.5 px-1.5 py-1 rounded-full text-[13px] hover:text-[#f1f1f1] transition-colors"
-          >
-            <MessageCircle className="w-5 h-5" strokeWidth={1.75} />
-            {post.reply_count > 0 && <span>{post.reply_count}</span>}
-          </Link>
+        <Link
+          href={`/${post.author.username}/${post.id}`}
+          aria-label="Reply"
+          className="flex items-center gap-1 h-8 px-2 rounded-full text-[13px] font-medium hover:bg-white/[0.06] hover:text-[#f3f5f7] transition-colors"
+        >
+          <MessageCircle className="w-5 h-5" strokeWidth={1.75} />
+          {post.reply_count > 0 && <span className="tabular-nums">{post.reply_count}</span>}
+        </Link>
 
-          {/* Repost */}
-          <button
-            onClick={() => repostMutation.mutate()}
-            disabled={repostMutation.isPending}
-            aria-label={isReposted ? 'Undo repost' : 'Repost'}
-            className={cn(
-              'flex items-center gap-1.5 px-1.5 py-1 rounded-full text-[13px] transition-colors',
-              isReposted ? 'text-green-500' : 'hover:text-green-500'
-            )}
-          >
-            <Repeat2 className="w-5 h-5" strokeWidth={1.75} />
-            {repostCount > 0 && <span>{repostCount}</span>}
-          </button>
+        <button
+          onClick={() => repostMutation.mutate()}
+          disabled={repostMutation.isPending}
+          aria-label={isReposted ? 'Undo repost' : 'Repost'}
+          className={cn(
+            'flex items-center gap-1 h-8 px-2 rounded-full text-[13px] font-medium transition-colors',
+            isReposted
+              ? 'text-[#22c55e]'
+              : 'hover:bg-white/[0.06] hover:text-[#f3f5f7]'
+          )}
+        >
+          <Repeat2 className="w-5 h-5" strokeWidth={1.75} />
+          {repostCount > 0 && <span className="tabular-nums">{repostCount}</span>}
+        </button>
 
-          {/* Share */}
-          <button aria-label="Share" className="flex items-center gap-1.5 px-1.5 py-1 rounded-full text-[13px] hover:text-[#f1f1f1] transition-colors">
-            <Share2 className="w-[18px] h-[18px]" strokeWidth={1.75} />
-          </button>
-
-          {/* Bookmark */}
-          <button
-            onClick={() => bookmarkMutation.mutate()}
-            disabled={bookmarkMutation.isPending}
-            aria-label={isBookmarked ? 'Remove bookmark' : 'Bookmark'}
-            className={cn(
-              'flex items-center gap-1.5 px-1.5 py-1 rounded-full text-[13px] transition-colors ml-auto',
-              isBookmarked ? 'text-violet-500' : 'hover:text-violet-500'
-            )}
-          >
-            <Bookmark
-              className={cn('w-[18px] h-[18px]', isBookmarked && 'fill-violet-500')}
-              strokeWidth={1.75}
-            />
-          </button>
-        </div>
+        <button
+          aria-label="Share"
+          className="flex items-center justify-center h-8 w-8 rounded-full hover:bg-white/[0.06] hover:text-[#f3f5f7] transition-colors"
+        >
+          <Share2 className="w-[18px] h-[18px]" strokeWidth={1.75} />
+        </button>
       </div>
     </article>
   )

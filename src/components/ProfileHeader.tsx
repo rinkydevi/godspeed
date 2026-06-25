@@ -2,12 +2,11 @@
 
 import { useState } from 'react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { ExternalLink, Calendar } from 'lucide-react'
 import Link from 'next/link'
 import { Avatar } from './Avatar'
 import { AgentBadge } from './AgentBadge'
 import { EditProfileModal } from './EditProfileModal'
-import { formatDate, cn } from '@/lib/utils'
+import { cn } from '@/lib/utils'
 import type { User } from '@/lib/types'
 
 interface ProfileHeaderProps {
@@ -56,104 +55,84 @@ export function ProfileHeader({ user: initialUser, currentUserId }: ProfileHeade
   })
 
   return (
-    <div className="px-4 pt-6 pb-4 border-b border-zinc-100 dark:border-zinc-900">
-      {/* Avatar + action button row */}
-      <div className="flex items-start justify-between mb-4">
+    <div className="px-6 pt-5 pb-4">
+      {/* Top row: name/handle LEFT, avatar RIGHT — Threads pattern */}
+      <div className="flex items-start justify-between gap-4 mb-3">
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2 flex-wrap">
+            <h1 className="text-[24px] font-bold text-[#f1f1f1] leading-tight tracking-tight">
+              {user.display_name}
+            </h1>
+            {user.is_agent && <AgentBadge size="md" />}
+          </div>
+          <p className="text-[15px] text-[#f1f1f1] mt-0.5">{user.username}</p>
+        </div>
         <Avatar
           src={user.avatar_url}
           name={user.display_name}
-          size={80}
+          size={84}
+          className="ring-2 ring-black"
+          priority
         />
-
-        {isOwnProfile ? (
-          <button
-            onClick={() => setEditOpen(true)}
-            className="px-5 py-2 rounded-xl border border-zinc-200 dark:border-zinc-800 text-[14px] font-semibold text-black dark:text-white hover:bg-zinc-50 dark:hover:bg-zinc-900 transition-colors"
-          >
-            Edit profile
-          </button>
-        ) : currentUserId ? (
-          <button
-            onClick={() => followMutation.mutate()}
-            disabled={followMutation.isPending}
-            className={cn(
-              'px-5 py-2 rounded-xl text-[14px] font-semibold transition-all',
-              isFollowing
-                ? 'border border-zinc-200 dark:border-zinc-800 text-black dark:text-white hover:bg-zinc-50 dark:hover:bg-zinc-900'
-                : 'bg-black dark:bg-white text-white dark:text-black hover:bg-zinc-800 dark:hover:bg-zinc-100',
-              followMutation.isPending && 'opacity-60 cursor-not-allowed'
-            )}
-          >
-            {isFollowing ? 'Following' : 'Follow'}
-          </button>
-        ) : (
-          <Link
-            href="/login"
-            className="px-5 py-2 rounded-xl bg-black dark:bg-white text-white dark:text-black text-[14px] font-semibold hover:bg-zinc-800 dark:hover:bg-zinc-100 transition-colors"
-          >
-            Follow
-          </Link>
-        )}
-      </div>
-
-      {/* Name + username */}
-      <div className="mb-3">
-        <div className="flex items-center gap-2 flex-wrap mb-0.5">
-          <h1 className="text-[22px] font-bold text-black dark:text-white leading-tight">{user.display_name}</h1>
-          {user.is_agent && <AgentBadge size="md" />}
-        </div>
-        <p className="text-[15px] text-zinc-500 dark:text-zinc-500">@{user.username}</p>
       </div>
 
       {/* Bio */}
       {user.bio && (
-        <p className="text-[15px] text-black dark:text-white leading-relaxed mb-4">
+        <p className="text-[15px] text-[#f1f1f1] leading-snug mb-3 whitespace-pre-wrap">
           {user.bio}
         </p>
       )}
 
-      {/* Meta */}
-      <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mb-4 text-[14px] text-zinc-500 dark:text-zinc-500">
-        {user.website && (
-          <a
-            href={user.website}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex items-center gap-1 hover:text-black dark:hover:text-white transition-colors"
-          >
-            <ExternalLink className="w-3.5 h-3.5" />
-            {user.website.replace(/^https?:\/\//, '')}
-          </a>
-        )}
-        <span className="flex items-center gap-1">
-          <Calendar className="w-3.5 h-3.5" />
-          Joined {formatDate(user.created_at)}
+      {/* Followers / link row */}
+      <div className="flex items-center gap-3 text-[14px] text-[#777] mb-4">
+        <span>
+          {followerCount.toLocaleString()} {followerCount === 1 ? 'follower' : 'followers'}
         </span>
+        {user.website && (
+          <>
+            <span className="text-[#333]">·</span>
+            <a
+              href={user.website}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hover:text-[#f1f1f1] transition-colors truncate"
+            >
+              {user.website.replace(/^https?:\/\//, '')}
+            </a>
+          </>
+        )}
       </div>
 
-      {/* Stats */}
-      <div className="flex gap-5 text-[14px]">
-        <span className="text-zinc-500 dark:text-zinc-500">
-          <strong className="text-black dark:text-white font-semibold">
-            {user.following_count ?? 0}
-          </strong>{' '}
-          Following
-        </span>
-        <span className="text-zinc-500 dark:text-zinc-500">
-          <strong className="text-black dark:text-white font-semibold">
-            {followerCount}
-          </strong>{' '}
-          Followers
-        </span>
-        {user.post_count !== undefined && (
-          <span className="text-zinc-500 dark:text-zinc-500">
-            <strong className="text-black dark:text-white font-semibold">
-              {user.post_count}
-            </strong>{' '}
-            Threads
-          </span>
-        )}
-      </div>
+      {/* Action button — full width, Threads style */}
+      {isOwnProfile ? (
+        <button
+          onClick={() => setEditOpen(true)}
+          className="w-full py-2 rounded-lg border border-[#333] text-[15px] font-semibold text-[#f1f1f1] hover:bg-[#1a1a1a] transition-colors"
+        >
+          Edit profile
+        </button>
+      ) : currentUserId ? (
+        <button
+          onClick={() => followMutation.mutate()}
+          disabled={followMutation.isPending}
+          className={cn(
+            'w-full py-2 rounded-lg text-[15px] font-semibold transition-all',
+            isFollowing
+              ? 'border border-[#333] text-[#f1f1f1] hover:bg-[#1a1a1a]'
+              : 'bg-[#f1f1f1] text-black hover:bg-[#d8d8d8]',
+            followMutation.isPending && 'opacity-60 cursor-not-allowed'
+          )}
+        >
+          {isFollowing ? 'Following' : 'Follow'}
+        </button>
+      ) : (
+        <Link
+          href="/login"
+          className="block w-full text-center py-2 rounded-lg bg-[#f1f1f1] text-black text-[15px] font-semibold hover:bg-[#d8d8d8] transition-colors"
+        >
+          Follow
+        </Link>
+      )}
 
       {editOpen && (
         <EditProfileModal

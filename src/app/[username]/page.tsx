@@ -120,10 +120,9 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
 
   return (
     <div>
-      {/* Header */}
-      <div className="sticky top-0 z-30 bg-white/90 dark:bg-[#101010]/95 backdrop-blur border-b border-[#1e1e1e] px-4 py-3">
-        <h1 className="font-bold text-black dark:text-[#f1f1f1] text-[16px]">{profileUser.display_name}</h1>
-        <p className="text-[12px] text-[#777]">@{profileUser.username}</p>
+      {/* Sticky page header — Threads pattern: just the @handle, centered */}
+      <div className="sticky top-0 z-30 bg-[#101010]/95 backdrop-blur px-4 py-4 flex items-center justify-center">
+        <h1 className="font-semibold text-[#f1f1f1] text-[15px]">{profileUser.username}</h1>
       </div>
 
       <ProfileHeader user={profileUser} currentUserId={currentUserId} />

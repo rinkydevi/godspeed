@@ -84,17 +84,27 @@ export function EditProfileModal({ user, onClose, onSuccess }: EditProfileModalP
       {/* Backdrop */}
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
 
-      {/* Sheet */}
-      <div className="relative w-full sm:max-w-md bg-[#101010] sm:rounded-2xl rounded-t-2xl border border-[#2a2a2a] px-5 pt-5 pb-8 z-10">
+      {/* Sheet — bottom-docked on mobile, centered on desktop */}
+      <div className="relative w-full sm:max-w-[560px] bg-[#181818] sm:rounded-2xl rounded-t-2xl border border-[#262626] px-5 pt-3 pb-8 z-10 max-h-[85vh] overflow-y-auto">
+        {/* Drag handle (mobile only) */}
+        <div className="sm:hidden w-9 h-1 rounded-full bg-[#3c3c3c] mx-auto mb-3" />
+
         {/* Header */}
-        <div className="flex items-center justify-between mb-5">
-          <h2 className="text-[17px] font-bold text-[#f1f1f1]">Edit profile</h2>
+        <div className="flex items-center justify-between mb-5 sm:pt-2">
           <button
             onClick={onClose}
-            className="w-8 h-8 flex items-center justify-center rounded-full text-[#777] hover:text-[#f1f1f1] hover:bg-[#1e1e1e] transition-colors"
+            className="text-[15px] font-medium text-[#f3f5f7] hover:text-[#777] transition-colors sm:hidden"
+          >
+            Cancel
+          </button>
+          <h2 className="text-[16px] font-bold text-[#f3f5f7] sm:mx-0 mx-auto">Edit profile</h2>
+          <button
+            onClick={onClose}
+            className="hidden sm:flex w-8 h-8 items-center justify-center rounded-full text-[#777] hover:text-[#f3f5f7] hover:bg-[#1e1e1e] transition-colors"
           >
             <X className="w-4 h-4" />
           </button>
+          <span className="sm:hidden w-[60px]" />
         </div>
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
@@ -113,7 +123,7 @@ export function EditProfileModal({ user, onClose, onSuccess }: EditProfileModalP
                 type="button"
                 onClick={() => avatarInputRef.current?.click()}
                 disabled={uploading}
-                className="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-[#2a2a2a] text-[13px] text-[#f1f1f1] hover:bg-[#1e1e1e] transition-colors disabled:opacity-50"
+                className="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-[#333] text-[13px] text-[#f3f5f7] hover:bg-[#1e1e1e] transition-colors disabled:opacity-50"
               >
                 <Upload className="w-3.5 h-3.5" />
                 Change photo
@@ -134,7 +144,7 @@ export function EditProfileModal({ user, onClose, onSuccess }: EditProfileModalP
               onChange={(e) => setDisplayName(e.target.value)}
               maxLength={50}
               placeholder="Your name"
-              className="w-full bg-[#1a1a1a] border border-[#2a2a2a] rounded-xl px-3.5 py-2.5 text-[14px] text-[#f1f1f1] placeholder-[#555] outline-none focus:border-[#444] transition-colors"
+              className="w-full bg-[#1a1a1a] border border-[#333] rounded-xl px-3.5 py-2.5 text-[14px] text-[#f3f5f7] placeholder-[#555] outline-none focus:border-[#444] transition-colors"
               required
             />
           </div>
@@ -150,7 +160,7 @@ export function EditProfileModal({ user, onClose, onSuccess }: EditProfileModalP
               maxLength={200}
               rows={3}
               placeholder="Tell the world what you're about…"
-              className="w-full bg-[#1a1a1a] border border-[#2a2a2a] rounded-xl px-3.5 py-2.5 text-[14px] text-[#f1f1f1] placeholder-[#555] outline-none focus:border-[#444] resize-none transition-colors"
+              className="w-full bg-[#1a1a1a] border border-[#333] rounded-xl px-3.5 py-2.5 text-[14px] text-[#f3f5f7] placeholder-[#555] outline-none focus:border-[#444] resize-none transition-colors"
             />
             <p className={cn(
               'text-right text-[11px] mt-1',
@@ -170,7 +180,7 @@ export function EditProfileModal({ user, onClose, onSuccess }: EditProfileModalP
               value={website}
               onChange={(e) => setWebsite(e.target.value)}
               placeholder="https://yoursite.com"
-              className="w-full bg-[#1a1a1a] border border-[#2a2a2a] rounded-xl px-3.5 py-2.5 text-[14px] text-[#f1f1f1] placeholder-[#555] outline-none focus:border-[#444] transition-colors"
+              className="w-full bg-[#1a1a1a] border border-[#333] rounded-xl px-3.5 py-2.5 text-[14px] text-[#f3f5f7] placeholder-[#555] outline-none focus:border-[#444] transition-colors"
             />
           </div>
 
@@ -181,7 +191,7 @@ export function EditProfileModal({ user, onClose, onSuccess }: EditProfileModalP
           <button
             type="submit"
             disabled={saving || !displayName.trim()}
-            className="w-full py-3 rounded-xl bg-white text-black font-semibold text-[15px] hover:bg-zinc-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed mt-1"
+            className="w-full h-11 rounded-xl bg-[#f3f5f7] text-black font-semibold text-[15px] hover:bg-[#d8d8d8] transition-colors disabled:opacity-50 disabled:cursor-not-allowed mt-1"
           >
             {saving ? 'Saving…' : 'Save changes'}
           </button>

@@ -32,31 +32,32 @@ export function MobileNav({ profile, hasUser }: MobileNavProps = {}) {
       if (!res.ok) return { unread_count: 0 }
       return res.json()
     },
-    refetchInterval: 30_000,
-    staleTime: 20_000,
+    refetchInterval: 60_000,
+    staleTime: 60_000,
     enabled: !!hasUser,
+    refetchOnMount: false,
   })
 
   const unreadCount = countData?.unread_count ?? 0
 
   const iconBase = 'flex items-center justify-center flex-1 h-full transition-opacity active:opacity-60'
-  const iconColor = (active: boolean) => active ? 'text-[#f1f1f1]' : 'text-[#5e5e5e]'
+  const iconColor = (active: boolean) => active ? 'text-[#f3f5f7]' : 'text-[#777]'
 
   return (
-    <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-black border-t border-[#1e1e1e] z-50 pb-[env(safe-area-inset-bottom)]">
-      <div className="flex items-stretch h-[60px]">
+    <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-[#101010] border-t border-[#262626] z-50 pb-[env(safe-area-inset-bottom)]">
+      <div className="flex items-stretch h-[56px]">
 
         <Link href="/" aria-label="Home" prefetch className={cn(iconBase, iconColor(isActive(pathname, '/')))}>
-          <Home className="w-[26px] h-[26px]" strokeWidth={isActive(pathname, '/') ? 2.5 : 1.75} fill={isActive(pathname, '/') ? 'currentColor' : 'none'} />
+          <Home className="w-[26px] h-[26px]" strokeWidth={isActive(pathname, '/') ? 2 : 1.75} fill={isActive(pathname, '/') ? 'currentColor' : 'none'} />
         </Link>
 
         <Link href="/search" aria-label="Search" prefetch className={cn(iconBase, iconColor(isActive(pathname, '/search')))}>
           <Search className="w-[26px] h-[26px]" strokeWidth={isActive(pathname, '/search') ? 2.5 : 1.75} />
         </Link>
 
-        <Link href="/?compose=1" aria-label="New thread" className={cn(iconBase, 'text-[#f1f1f1]')}>
-          <div className="w-[44px] h-[34px] rounded-xl bg-[#1e1e1e] flex items-center justify-center">
-            <PenSquare className="w-[20px] h-[20px]" strokeWidth={1.85} />
+        <Link href="/?compose=1" aria-label="New thread" className={cn(iconBase, 'text-[#f3f5f7]')}>
+          <div className="w-[44px] h-[32px] rounded-lg bg-[#1e1e1e] flex items-center justify-center">
+            <PenSquare className="w-[20px] h-[20px]" strokeWidth={2} />
           </div>
         </Link>
 
@@ -69,11 +70,11 @@ export function MobileNav({ profile, hasUser }: MobileNavProps = {}) {
           <div className="relative">
             <Heart
               className="w-[26px] h-[26px]"
-              strokeWidth={isActive(pathname, '/notifications') ? 2.5 : 1.75}
+              strokeWidth={isActive(pathname, '/notifications') ? 2 : 1.75}
               fill={isActive(pathname, '/notifications') ? 'currentColor' : 'none'}
             />
             {unreadCount > 0 && !isActive(pathname, '/notifications') && (
-              <span className="absolute -top-1 -right-2 min-w-[16px] h-[16px] rounded-full bg-rose-500 text-white text-[10px] font-bold flex items-center justify-center px-1 leading-none border-2 border-black">
+              <span className="absolute -top-1 -right-2 min-w-[16px] h-[16px] rounded-full bg-[#ff3040] text-white text-[10px] font-bold flex items-center justify-center px-1 leading-none border-2 border-[#101010]">
                 {unreadCount > 99 ? '99+' : unreadCount}
               </span>
             )}
@@ -88,7 +89,7 @@ export function MobileNav({ profile, hasUser }: MobileNavProps = {}) {
         >
           <User
             className="w-[26px] h-[26px]"
-            strokeWidth={isProfileActive ? 2.5 : 1.75}
+            strokeWidth={isProfileActive ? 2 : 1.75}
             fill={isProfileActive ? 'currentColor' : 'none'}
           />
         </Link>
